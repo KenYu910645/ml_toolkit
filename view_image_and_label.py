@@ -2,10 +2,15 @@ import cv2
 import time
 import os
 
+# TODO 
+# images files 
 img_dir = "/home/spiderkiller/squeezedet-keras/training/image_2"
-ano_dir = "/home/spiderkiller/squeezedet-keras/training/label_2"
+# Anotations files 
+# ano_dir = "/home/spiderkiller/squeezedet-keras/training/label_2"
+ano_dir = "/home/spiderkiller/squeezedet-keras/training/result/"
+# output image directory (Optional)
 out_dir = "/mnt/c/Users/spide/Desktop/tmp/"
-
+ 
 img_paths = [os.path.join(img_dir, i) for i in os.listdir(img_dir)]
 ano_paths = [os.path.join(ano_dir, i) for i in os.listdir(ano_dir)]
 
@@ -39,6 +44,7 @@ for img_path in img_paths:
             ymin = int(float(d[5]))
             xmax = int(float(d[6]))
             ymax = int(float(d[7]))
+
         except IndexError:
             print("Something wrong with the index of labels in file: " + name + '.txt')
             continue
