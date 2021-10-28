@@ -1,9 +1,12 @@
 # Input 
 # src_path = "../bdd100k_all/train/"
-src_path = "../bdd100k_all/val/"
+# src_path = "../bdd100k_all/val/"
+src_path = "../bdd100k_all/test/"
 # Output
 # out_path = "../darknet/data/bdd100k_train.txt"
-out_path = "../darknet/data/bdd100k_val.txt"
+# out_path = "../darknet/data/bdd100k_val.txt"
+out_path = "../darknet/data/bdd100k_test.txt"
+
 
 import os
 # image_files = []
