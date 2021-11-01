@@ -2,7 +2,7 @@ import pprint # for prettier print
 import json
 from shutil import copyfile 
 
-# pick images from bdd100k original images with specified condition.
+# pick images from bdd100k with specified condition.
 
 # YOLO label format:
 # <object_class> <x> <y> <width> <height>

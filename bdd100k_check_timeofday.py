@@ -1,7 +1,7 @@
 # Check time of day by brightness
 
 # Intput 
-src_dir = "../bdd100k_new/val/daytime/"
+src_dir = "../bdd100k_daytime_train/train/" # "../bdd100k_new/val/daytime/"
 # Output
 wrong_list = "./wrong_list.txt"
 

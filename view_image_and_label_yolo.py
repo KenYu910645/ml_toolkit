@@ -5,12 +5,13 @@ from shutil import rmtree
 
 # TODO 
 # images files 
-img_dir = "/home/spiderkiller/squeezedet-keras/training/image_2/"
+img_dir = "../image_2/"
 # Anotations files 
 # ano_dir = "/home/spiderkiller/squeezedet-keras/training/label_2"
 ano_dir = "/home/spiderkiller/kitti_dataset/label_2_yolo_format/"
 # output image directory (Optional)
-out_dir = "/mnt/c/Users/spide/Desktop/tmp/"
+# out_dir = "/mnt/c/Users/spide/Desktop/tmp/"
+out_dir = "tmp/"
 
 img_paths = [os.path.join(img_dir, i) for i in os.listdir(img_dir)]
 ano_paths = [os.path.join(ano_dir, i) for i in os.listdir(ano_dir)]
