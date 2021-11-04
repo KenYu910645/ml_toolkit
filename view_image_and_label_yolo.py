@@ -2,19 +2,23 @@ import cv2
 import time
 import os
 from shutil import rmtree
+import glob
 
 # TODO 
 # images files 
-img_dir = "../image_2/"
+img_dir = "../bdd100k_all/train/"
 # Anotations files 
 # ano_dir = "/home/spiderkiller/squeezedet-keras/training/label_2"
-ano_dir = "/home/spiderkiller/kitti_dataset/label_2_yolo_format/"
+ano_dir = "../bdd100k_all/train/"
 # output image directory (Optional)
 # out_dir = "/mnt/c/Users/spide/Desktop/tmp/"
 out_dir = "tmp/"
 
-img_paths = [os.path.join(img_dir, i) for i in os.listdir(img_dir)]
-ano_paths = [os.path.join(ano_dir, i) for i in os.listdir(ano_dir)]
+# img_paths = [os.path.join(img_dir, i) for i in os.listdir(img_dir)]
+# ano_paths = [os.path.join(ano_dir, i) for i in os.listdir(ano_dir)]
+
+img_paths = glob.glob(img_dir + "*.jpg")
+ano_paths = glob.glob(img_dir + "*.txt")
 
 print("Get " + str(len(img_paths)) + " images in " + img_dir)
 print("Get " + str(len(ano_paths)) + " labels in " + ano_dir)

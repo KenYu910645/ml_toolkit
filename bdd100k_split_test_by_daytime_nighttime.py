@@ -7,13 +7,13 @@ import json
 
 # TODO 
 # Input 
-src_dir = "../bdd100k_all/test/"
+src_dir = "../bdd100k_all/train/"
 print("Loading json file")
 raw_json = json.load(open("../bdd100k_all/bdd100k_labels_images_train.json", "r")) + json.load(open("../bdd100k_all/bdd100k_labels_images_val.json", "r"))
 # raw_json.update(raw_json_val)
 # Output
-out_daytime_dir = "../bdd100k_daytime_train/"
-out_night_dir = "../bdd100k_all/test_only_night/"
+out_daytime_dir = "../bdd100k_daytime_train/tmp_train_daytime/"
+out_night_dir = "../bdd100k_daytime_train/train_only_night/"
 
 # Clean directory
 for i in [out_daytime_dir, out_night_dir]:
