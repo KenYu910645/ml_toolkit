@@ -28,6 +28,7 @@ typedef boost::geometry::model::polygon<boost::geometry::model::d2::point_xy<dou
 
 using namespace std;
 
+const bool DEBUG = false;
 /*=======================================================================
 STATIC EVALUATION PARAMETERS
 =======================================================================*/
@@ -55,6 +56,7 @@ const double MIN_OVERLAP[3][3] = {{0.7, 0.5, 0.5}, {0.7, 0.5, 0.5}, {0.7, 0.5, 0
 
 // no. of recall steps that should be evaluated (discretized)
 const double N_SAMPLE_PTS = 41;
+
 
 
 // initialize class names
@@ -678,7 +680,7 @@ bool eval_class (FILE *fp_det, FILE *fp_ori, CLASSES current_class,
     }
   }
   // if (difficulty == EASY){
-  if (true){
+  if (DEBUG){
     if (difficulty == EASY) cout << "EASY" << endl;
     if (difficulty == MODERATE) cout << "MODERATE" << endl;
     if (difficulty == HARD) cout << "HARD" << endl;
@@ -720,7 +722,7 @@ void saveAndPlotPlots(string dir_name,string file_name,string obj_type,vector<do
 
   // save plot data to file
   FILE *fp = fopen((dir_name + file_name + ".txt").c_str(),"w");
-  printf("save %s\n", (dir_name + file_name + ".txt").c_str());
+  // printf("save %s\n", (dir_name + file_name + ".txt").c_str());
   for (int32_t i=0; i<(int)N_SAMPLE_PTS; i++)
     fprintf(fp,"%f %f %f %f\n",(double)i/(N_SAMPLE_PTS-1.0),vals[0][i],vals[1][i],vals[2][i]);
   fclose(fp);
@@ -729,7 +731,7 @@ void saveAndPlotPlots(string dir_name,string file_name,string obj_type,vector<do
   for (int v = 0; v < 3; ++v)
       for (int i = 0; i < vals[v].size(); i = i + 4)
           sum[v] += vals[v][i];
-  cout << " sum[0] = "  <<  sum[0] << endl;
+  // cout << " sum[0] = "  <<  sum[0] << endl;
   printf("%s AP: %f %f %f\n", file_name.c_str(), sum[0] / 11 * 100, sum[1] / 11 * 100, sum[2] / 11 * 100);
 
   // create png + eps
@@ -860,7 +862,10 @@ bool eval(string gt_dir, string result_dir, string output_dir, Mail* mail){
 
   // holds pointers for result files
   FILE *fp_det=0, *fp_ori=0;
-
+  cout << endl;
+  cout << "***********************************************" << endl;
+  cout << "************** 2D bounding boxes **************" << endl;
+  cout << "***********************************************" << endl;
   // eval image 2D bounding boxes
   for (int c = 0; c < NUM_CLASS; c++) {
     CLASSES cls = (CLASSES)c;
@@ -886,7 +891,10 @@ bool eval(string gt_dir, string result_dir, string output_dir, Mail* mail){
 
   // don't evaluate AOS for birdview boxes and 3D boxes
   compute_aos = false;
-
+  cout << endl;
+  cout << "*********************************" << endl;
+  cout << "*************  BEV  *************" << endl;
+  cout << "*********************************" << endl;
   // eval bird's eye view bounding boxes
   for (int c = 0; c < NUM_CLASS; c++) {
     CLASSES cls = (CLASSES)c;
@@ -904,6 +912,10 @@ bool eval(string gt_dir, string result_dir, string output_dir, Mail* mail){
     }
   }
 
+  cout << endl;
+  cout << "***********************************************" << endl;
+  cout << "************** 3D bounding boxes **************" << endl;
+  cout << "***********************************************" << endl;
   // eval 3D bounding boxes
   for (int c = 0; c < NUM_CLASS; c++) {
     CLASSES cls = (CLASSES)c;

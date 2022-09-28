@@ -10,20 +10,62 @@ from PIL import Image
 from shutil import rmtree
 
 IS_LABELED = True
+IS_COMPARE = True
+
+# Get all of them combine
+LABEL_DIR  = "/home/lab530/KenYu/visualDet3D/kitti/training/label_2/"
+IMAGE_DIR  = "/home/lab530/KenYu/visualDet3D/kitti/training/image_2/"
+CALIB_DIR  = "/home/lab530/KenYu/visualDet3D/kitti/training/calib/"
+OUTPUT_DIR = "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/viz_result/comparison/"
+PRED_DIRS = {"Pseudo-LiDAR" : "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/pseudo_lidar_prediction/",
+            "MonoFlex"     : "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/monoflex_prediction/" ,
+            "DD3D"         : "/home/lab530/KenYu/dd3d/outputs/2cyqwjvr-20220811_163826/inference/final-tta/kitti_3d_val/bbox3d_predictions_standard_format/",
+            "GAC"          : "/home/lab530/KenYu/visualDet3D/baseline_exp/Mono3D/output/validation/data/",
+            "SMOKE"        : "/home/lab530/KenYu/SMOKE/tools/logs/inference/kitti_train/data/"}
+PRED_LIST = ["SMOKE", "MonoFlex", "GAC", "DD3D", "Pseudo-LiDAR"]
+
+OBJ_COLOR = {'Cyclist': 'yellow', 
+             'Pedestrian': 'cyan', 
+             'Van': 'red', 
+             'Misc': 'purple', 
+             'Truck': 'orange',
+             'Car'  : 'green'}
+
+
+# For Pseudo-LiDAR
+# LABEL_DIR  = "/home/lab530/KenYu/visualDet3D/kitti/training/label_2/"
+# IMAGE_DIR  = "/home/lab530/KenYu/visualDet3D/kitti/training/image_2/"
+# CALIB_DIR  = "/home/lab530/KenYu/visualDet3D/kitti/training/calib/"
+# PREDI_DIR  = "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/pseudo_lidar_prediction/"
+# OUTPUT_DIR = "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/viz_result/Pseudo_Lidar/"
+
+# For Monoflex
+# LABEL_DIR = "/data/datasets/KITTI3D/training/label_2/"
+# IMAGE_DIR = "/data/datasets/KITTI3D/training/image_2/"
+# CALIB_DIR = "/data/datasets/KITTI3D/training/calib/"
+# PREDI_DIR = "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/monoflex_prediction/"
+# OUTPUT_DIR = "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/viz_result/Monoflex/"
+
+# For DD3D
+# LABEL_DIR = "/data/datasets/KITTI3D/training/label_2/"
+# IMAGE_DIR = "/data/datasets/KITTI3D/training/image_2/"
+# CALIB_DIR = "/data/datasets/KITTI3D/training/calib/"
+# PREDI_DIR = "/home/lab530/KenYu/dd3d/outputs/2cyqwjvr-20220811_163826/inference/final-tta/kitti_3d_val/bbox3d_predictions_standard_format/"
+# OUTPUT_DIR = "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/viz_result/DD3D/"
 
 # For GAC
 # LABEL_DIR = "/home/lab530/KenYu/visualDet3D/kitti/training/label_2/"
 # IMAGE_DIR = "/home/lab530/KenYu/visualDet3D/kitti/training/image_2/"
 # CALIB_DIR = "/home/lab530/KenYu/visualDet3D/kitti/training/calib/"
-# PREDI_DIR = "/home/lab530/KenYu/visualDet3D/my_exp/Mono3D/output/validation/data_rename/"
-# OUTPUT_DIR = "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/viz_result/"
+# PREDI_DIR = "/home/lab530/KenYu/visualDet3D/baseline_exp/Mono3D/output/validation/data/"
+# OUTPUT_DIR = "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/viz_result/GAC/"
 
 # For M3D-RPN
-LABEL_DIR = "/home/lab530/KenYu/M3D-RPN/data/kitti_split1/validation/label_2/"
-IMAGE_DIR = "/home/lab530/KenYu/M3D-RPN/data/kitti_split1/validation/image_2/"
-CALIB_DIR = "/home/lab530/KenYu/M3D-RPN/data/kitti_split1/validation/calib/"
-PREDI_DIR = "/home/lab530/KenYu/M3D-RPN/output/tmp_results/data/"
-OUTPUT_DIR = "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/viz_result/"
+# LABEL_DIR = "/home/lab530/KenYu/M3D-RPN/data/kitti_split1/validation/label_2/"
+# IMAGE_DIR = "/home/lab530/KenYu/M3D-RPN/data/kitti_split1/validation/image_2/"
+# CALIB_DIR = "/home/lab530/KenYu/M3D-RPN/data/kitti_split1/validation/calib/"
+# PREDI_DIR = "/home/lab530/KenYu/M3D-RPN/output/tmp_results/data/"
+# OUTPUT_DIR = "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/viz_result/M3DRPN/"
 
 # For 3DBB
 # LABEL_DIR = "/home/lab530/KenYu/3d-bounding-box-estimation-for-autonomous-driving/training/label_2/"
@@ -39,14 +81,14 @@ OUTPUT_DIR = "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/vi
 # PREDI_DIR = "/home/lab530/KenYu/3D-BoundingBox/testing_result/det/"
 # OUTPUT_DIR = "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/viz_result/"
 
-# validation of training dataset
+# SMOKE
 # LABEL_DIR = "/home/lab530/KenYu/SMOKE/datasets/kitti/training/label_2/"
 # IMAGE_DIR = "/home/lab530/KenYu/SMOKE/datasets/kitti/training/image_2/"
 # CALIB_DIR = "/home/lab530/KenYu/SMOKE/datasets/kitti/training/calib/"
 # PREDI_DIR = "/home/lab530/KenYu/SMOKE/tools/logs/inference/kitti_train/data/"
-# OUTPUT_DIR = "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/viz_result/"
+# OUTPUT_DIR = "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/viz_result/SMOKE/"
 
-# testing set
+# SMOKE testing
 # LABEL_DIR = "/home/lab530/KenYu/SMOKE/datasets/kitti/training/label_2/" # Not used
 # IMAGE_DIR = "/home/lab530/KenYu/SMOKE/datasets/kitti/testing/image_2/"
 # CALIB_DIR = "/home/lab530/KenYu/SMOKE/datasets/kitti/testing/calib/"
@@ -197,6 +239,11 @@ def draw_birdeyes(ax2, line, color, title):
     pth = Path(gt_corners_2d, codes)
     p = patches.PathPatch(pth, fill=False, color=color, label=title)
     ax2.add_patch(p)
+    # Draw conf text
+    if len(line) == 16: # Prediction 
+        conf = round(float(line[-1]), 2)
+        ax2.text(max(gt_corners_2d[:, 0]), max(gt_corners_2d[:, 1]),
+                str(conf), fontsize=8, color = (1, 0, 0))
 
 def compute_3Dbox(P2, line):
     obj = detectionInfo(line)
@@ -248,14 +295,20 @@ def draw_3Dbox(ax, P2, line, color):
     codes[0] = Path.MOVETO
     # codes[-1] = Path.CLOSEPOLYq
     pth = Path(verts, codes)
-    p = patches.PathPatch(pth, fill=False, color=color, linewidth=2)
+    p = patches.PathPatch(pth, fill=False, color=color, linewidth=1)
 
     width = corners_2D[:, 3][0] - corners_2D[:, 1][0]
     height = corners_2D[:, 2][1] - corners_2D[:, 1][1]
+    
     # put a mask on the front
     front_fill = patches.Rectangle((corners_2D[:, 1]), width, height, fill=True, color=color, alpha=0.4)
     ax.add_patch(p)
     ax.add_patch(front_fill)
+    if len(line) == 16: # Prediction 
+        conf = round(float(line[-1]), 2)
+        ax.text(max(0, min(corners_2D[0])), 
+                max(0, min(corners_2D[1])),
+                str(conf), fontsize=10, color = (1, 0, 0))
 
 def draw_2Dbox(ax, line, color):
     x1, y1, x2, y2 = (int(float(line[4])), int(float(line[5])), int(float(line[6])), int(float(line[7])))
@@ -266,7 +319,7 @@ def draw_2Dbox(ax, line, color):
                                     height, 
                                     fill=False, 
                                     color=color, 
-                                    linewidth=2,
+                                    linewidth=1,
                                     alpha=1)
     ax.add_patch(front_fill)
 
@@ -297,133 +350,170 @@ if os.path.exists(OUTPUT_DIR):
     rmtree(OUTPUT_DIR)
 os.mkdir(OUTPUT_DIR)
 
-dataset = [name.split('.')[0] for name in sorted(os.listdir(PREDI_DIR))]
-VEHICLES = ['Car', 'Cyclist', 'Pedestrian']
+dataset = [name.split('.')[0] for name in sorted(os.listdir(PRED_DIRS[PRED_LIST[0]]))]
 
-for index in range(len(dataset)):
-    image_file = os.path.join(IMAGE_DIR, dataset[index] + '.png')
-    if IS_LABELED:
-        label_file = os.path.join(LABEL_DIR, dataset[index] + '.txt')
-    prediction_file = os.path.join(PREDI_DIR, dataset[index] + '.txt')
-    calibration_file = os.path.join(CALIB_DIR, dataset[index] + '.txt')
-    # calibration_file = "/home/lab530/KenYu/3D-BoundingBox/Kitti/valid_split/calib/calib_cam_to_cam.txt"
-    for line in open(calibration_file):
-        if 'P2' in line:
-            P2 = line.split(' ')
-            P2 = np.asarray([float(i) for i in P2[1:]])
-            P2 = np.reshape(P2, (3, 4))
-    # fig = plt.figure(figsize=(20.00, 5.12), dpi=100)
-    fig = plt.figure(figsize=(15.00, 10), dpi=100)
-    # fig.tight_layout()
-    gs = GridSpec(3, 4)
-    gs.update(wspace=0)  # set the spacing between axes.
+VEHICLES = ['Car'] # ['Car', 'Cyclist', 'Pedestrian']
+if not IS_COMPARE:
+    for index in range(len(dataset)):
+        image_file = os.path.join(IMAGE_DIR, dataset[index] + '.png')
+        if IS_LABELED:
+            label_file = os.path.join(LABEL_DIR, dataset[index] + '.txt')
+        prediction_file = os.path.join(PREDI_DIR, dataset[index] + '.txt')
+        calibration_file = os.path.join(CALIB_DIR, dataset[index] + '.txt')
+        # calibration_file = "/home/lab530/KenYu/3D-BoundingBox/Kitti/valid_split/calib/calib_cam_to_cam.txt"
+        for line in open(calibration_file):
+            if 'P2' in line:
+                P2 = line.split(' ')
+                P2 = np.asarray([float(i) for i in P2[1:]])
+                P2 = np.reshape(P2, (3, 4))
+        # fig = plt.figure(figsize=(20.00, 5.12), dpi=100)
+        fig = plt.figure(figsize=(15.00, 10), dpi=100)
+        # fig.tight_layout()
+        gs = GridSpec(3, 4)
+        gs.update(wspace=0)  # set the spacing between axes.
 
-    ax  = fig.add_subplot(gs[0, :3])
-    ax2 = fig.add_subplot(gs[:, 3])
-    ax_gt   = fig.add_subplot(gs[1, :3])
-    ax_2dbb = fig.add_subplot(gs[2, :3])
+        ax  = fig.add_subplot(gs[0, :3])
+        ax2 = fig.add_subplot(gs[:, 3])
+        ax_gt   = fig.add_subplot(gs[1, :3])
+        ax_2dbb = fig.add_subplot(gs[2, :3])
+        
+        # with writer.saving(fig, "kitti_30_20fps.mp4", dpi=100):
+        image = Image.open(image_file).convert('RGB')
+        shape = 900 # 900
+        birdimage = np.zeros((shape, shape, 3), np.uint8)
+
+        if IS_LABELED:
+            with open(label_file) as f1:
+                for line_gt in f1:
+                    line_gt = line_gt.strip().split(' ')
+                    # Draw GT 3D bounding box
+                    if line_gt[0] in VEHICLES:
+                        color = OBJ_COLOR[line_gt[0]]
+                        draw_3Dbox(ax_gt, P2, line_gt, color)
+                        ax_gt.set_title("Ground True Bounding Box")
+                        draw_birdeyes(ax2, line_gt, 'orange', 'ground truth')
+                        ax2.set_title("Bird Eye View")
+
+        with open(prediction_file) as f2:
+            for line_p in f2:
+                line_p = line_p.strip().split(' ')
+                if line_p[0] in VEHICLES:
+                    color = OBJ_COLOR[line_p[0]]
+                    draw_3Dbox(ax, P2, line_p, color)
+                    ax.set_title("Detection Bounding Box")
+                    draw_birdeyes(ax2, line_p, 'green', 'prediction')
+                    ax2.set_title("Bird Eye View")
+                    draw_2Dbox(ax_2dbb, line_p, color)
+                    ax_2dbb.set_title("Predicted 2D Bounding Box")
+
+        # visualize 3D bounding box
+        for i in [ax, ax_2dbb, ax_gt]:
+            i.imshow(image)
+            i.set_xticks([]) #remove axis value
+            i.set_yticks([])
+
+        # plot camera view range
+        x1 = np.linspace(0, shape / 2)
+        x2 = np.linspace(shape / 2, shape)
+        ax2.plot(x1, shape / 2 - x1, ls='--', color='grey', linewidth=1, alpha=0.5)
+        ax2.plot(x2, x2 - shape / 2, ls='--', color='grey', linewidth=1, alpha=0.5)
+        ax2.plot(shape / 2, 0, marker='+', markersize=16, markeredgecolor='red')
+
+        # visualize bird eye view
+        ax2.imshow(birdimage, origin='lower')
+        ax2.set_xticks([])
+        ax2.set_yticks([])
+
+        # add legend
+        # handles, labels = ax2.get_legend_handles_labels()
+        # legend = ax2.legend([handles[0], handles[1]], [labels[0], labels[1]], loc='lower right',
+        #                     fontsize='x-small', framealpha=0.2)
+        # for text in legend.get_texts():
+        #     plt.setp(text, color='w')
+
+        # if args.save == False:
+        #     plt.show()
+        # else:
+        
+        fig.savefig(os.path.join(OUTPUT_DIR, dataset[index]), dpi=fig.dpi, bbox_inches='tight', pad_inches=0)
+        print(f"Save figure to {os.path.join(OUTPUT_DIR, dataset[index])}")
+        plt.close(fig) # avoid comsumer too many memory
+        # video_writer.write(np.uint8(fig))
     
-    # with writer.saving(fig, "kitti_30_20fps.mp4", dpi=100):
-    image = Image.open(image_file).convert('RGB')
-    shape = 900 # 900
-    birdimage = np.zeros((shape, shape, 3), np.uint8)
+    
+else:
+    for index in range(len(dataset)):
+        # Create fig
+        fig = plt.figure(figsize=(18, 30), dpi=100)
+        # fig.tight_layout()
+        plt.subplots_adjust(wspace=0, hspace=0)
+        # 
+        gs = GridSpec(2+len(PRED_LIST), 4)
+        gs.update(wspace=0)  # set the spacing between axes.
+        ax_img = [fig.add_subplot(gs[i, :3]) for i in range(2 + len(PRED_LIST))]
+        ax_bev = [fig.add_subplot(gs[i+1,3]) for i in range(len(PRED_LIST)+1)]
+        # Load image 
+        image_file = os.path.join(IMAGE_DIR, dataset[index] + '.png')
+        image = Image.open(image_file).convert('RGB')
+        
+        # Load label file
+        label_file = os.path.join(LABEL_DIR, dataset[index] + '.txt')
+ 
+        # Load calibration file
+        calibration_file = os.path.join(CALIB_DIR, dataset[index] + '.txt')
+        for line in open(calibration_file):
+            if 'P2' in line:
+                P2 = line.split(' ')
+                P2 = np.asarray([float(i) for i in P2[1:]])
+                P2 = np.reshape(P2, (3, 4))
 
-    if IS_LABELED:
+        # Draw Ground true image
         with open(label_file) as f1:
             for line_gt in f1:
                 line_gt = line_gt.strip().split(' ')
                 # Draw GT 3D bounding box
-                color = 'green'
-                if line_gt[0] == 'Cyclist':
-                    color = 'yellow'
-                elif line_gt[0] == 'Pedestrian':
-                    color = 'cyan'
-                elif line_gt[0] == 'Van':
-                    color = 'red'
-                elif line_gt[0] == 'Misc':
-                    color = 'purple'
-                elif line_gt[0] == 'Truck':
-                    color = 'orange'
-                draw_3Dbox(ax_gt, P2, line_gt, color)
-                ax_gt.set_title("Ground True Bounding Box")
-                draw_birdeyes(ax2, line_gt, 'orange', 'ground truth')
-                ax2.set_title("Bird Eye View")
+                if line_gt[0] in VEHICLES:
+                    color = OBJ_COLOR[line_gt[0]]
+                    draw_3Dbox(ax_img[1], P2, line_gt, color)
+                    [draw_birdeyes(a, line_gt, 'orange', 'ground truth') for a in ax_bev]
 
-    with open(prediction_file) as f2:
-        for line_p in f2:
-            line_p = line_p.strip().split(' ')
-            if line_p[0] in VEHICLES:
-                color = 'green'
-                if line_p[0] == 'Cyclist':
-                    color = 'yellow'
-                elif line_p[0] == 'Pedestrian':
-                    color = 'cyan'
-                elif line_p[0] == 'Van':
-                    color = 'red'
-                elif line_p[0] == 'Misc':
-                    color = 'purple'
-                elif line_p[0] == 'Truck':
-                    color = 'orange'
-                draw_3Dbox(ax, P2, line_p, color)
-                ax.set_title("Detection Bounding Box")
-                draw_birdeyes(ax2, line_p, 'green', 'prediction')
-                ax2.set_title("Bird Eye View")
-                draw_2Dbox(ax_2dbb, line_p, color)
-                ax_2dbb.set_title("Predicted 2D Bounding Box")
+        for method_idx, method_name in enumerate(PRED_LIST) :
+            prediction_file  = os.path.join(PRED_DIRS[method_name], dataset[index] + '.txt')
+            with open(prediction_file) as f2:
+                for line_p in f2:
+                    line_p = line_p.strip().split(' ')
+                    if line_p[0] in VEHICLES:
+                        color = OBJ_COLOR[line_p[0]]
+                        draw_3Dbox(ax_img[method_idx+2], P2, line_p, color)
+                        draw_birdeyes(ax_bev[method_idx+1], line_p, 'green', 'prediction')
 
-    # else: # Unlabeled dataset
-    #     with open(prediction_file) as f1:
-    #         for line_p in f1:
-    #             line_p = line_p.strip().split(' ')
-    #             if line_p[0] in VEHICLES:
-    #                 color = 'green'
-    #                 if line_p[0] == 'Cyclist':
-    #                     color = 'yellow'
-    #                 elif line_p[0] == 'Pedestrian':
-    #                     color = 'cyan'
-    #                 elif line_p[0] == 'Van':
-    #                     color = 'red'
-    #                 elif line_p[0] == 'Misc':
-    #                     color = 'purple'
-    #                 elif line_p[0] == 'Truck':
-    #                     color = 'orange'
+        # Draw method_name on canvas
+        for i, m_name in enumerate(['Input', 'Ground True'] + PRED_LIST):
+            ax_img[i].text(1 , 1, m_name, fontsize=20, color = (1, 1, 0),
+                    bbox=dict(facecolor='black', boxstyle='round'),
+                    horizontalalignment='left',
+                    verticalalignment='top')
+        
+        # visualize 3D bounding box
+        for i in ax_img:
+            i.imshow(image)
+            i.set_xticks([]) # remove axis value
+            i.set_yticks([])
 
-    #                 draw_3Dbox(ax, P2, line_p, color)
-    #                 ax.set_title("Detection Bounding Box")
-    #                 draw_birdeyes(ax2, line_p, 'green', 'prediction')
-    #                 ax2.set_title("Bird Eye View")
-    #                 draw_2Dbox(ax_2dbb, line_p, color)
-    #                 ax_2dbb.set_title("2D Bounding Box")
+        # Visualize BEV
+        shape = 900
+        birdimage = np.zeros((shape, shape, 3), np.uint8)
+        # plot camera view range
+        x1 = np.linspace(0, shape / 2)
+        x2 = np.linspace(shape / 2, shape)
+        for i in ax_bev:
+            i.plot(x1, shape / 2 - x1, ls='--', color='grey', linewidth=1, alpha=0.5)
+            i.plot(x2, x2 - shape / 2, ls='--', color='grey', linewidth=1, alpha=0.5)
+            i.plot(shape / 2, 0, marker='+', markersize=16, markeredgecolor='red')
+            i.imshow(birdimage, origin='lower')
+            i.set_xticks([])
+            i.set_yticks([])
 
-    # visualize 3D bounding box
-    for i in [ax, ax_2dbb, ax_gt]:
-        i.imshow(image)
-        i.set_xticks([]) #remove axis value
-        i.set_yticks([])
-
-    # plot camera view range
-    x1 = np.linspace(0, shape / 2)
-    x2 = np.linspace(shape / 2, shape)
-    ax2.plot(x1, shape / 2 - x1, ls='--', color='grey', linewidth=1, alpha=0.5)
-    ax2.plot(x2, x2 - shape / 2, ls='--', color='grey', linewidth=1, alpha=0.5)
-    ax2.plot(shape / 2, 0, marker='+', markersize=16, markeredgecolor='red')
-
-    # visualize bird eye view
-    ax2.imshow(birdimage, origin='lower')
-    ax2.set_xticks([])
-    ax2.set_yticks([])
-
-    # add legend
-    # handles, labels = ax2.get_legend_handles_labels()
-    # legend = ax2.legend([handles[0], handles[1]], [labels[0], labels[1]], loc='lower right',
-    #                     fontsize='x-small', framealpha=0.2)
-    # for text in legend.get_texts():
-    #     plt.setp(text, color='w')
-
-    # if args.save == False:
-    #     plt.show()
-    # else:
-    
-    fig.savefig(os.path.join(OUTPUT_DIR, dataset[index]), dpi=fig.dpi, bbox_inches='tight', pad_inches=0)
-    print(f"Save figure to {os.path.join(OUTPUT_DIR, dataset[index])}")
-    # video_writer.write(np.uint8(fig))
+        fig.savefig(os.path.join(OUTPUT_DIR, dataset[index]), dpi=fig.dpi, bbox_inches='tight', pad_inches=0)
+        print(f"Save figure to {os.path.join(OUTPUT_DIR, dataset[index])}")
+        plt.close(fig) # avoid comsumer too many memory
