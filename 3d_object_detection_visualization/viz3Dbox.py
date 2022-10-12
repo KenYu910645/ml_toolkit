@@ -10,19 +10,53 @@ from PIL import Image
 from shutil import rmtree
 
 IS_LABELED = True
-IS_COMPARE = True
+IS_COMPARE = False
 
-# Get all of them combine
-LABEL_DIR  = "/home/lab530/KenYu/visualDet3D/kitti/training/label_2/"
-IMAGE_DIR  = "/home/lab530/KenYu/visualDet3D/kitti/training/image_2/"
-CALIB_DIR  = "/home/lab530/KenYu/visualDet3D/kitti/training/calib/"
-OUTPUT_DIR = "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/viz_result/comparison/"
-PRED_DIRS = {"Pseudo-LiDAR" : "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/pseudo_lidar_prediction/",
-            "MonoFlex"     : "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/monoflex_prediction/" ,
-            "DD3D"         : "/home/lab530/KenYu/dd3d/outputs/2cyqwjvr-20220811_163826/inference/final-tta/kitti_3d_val/bbox3d_predictions_standard_format/",
-            "GAC"          : "/home/lab530/KenYu/visualDet3D/baseline_exp/Mono3D/output/validation/data/",
-            "SMOKE"        : "/home/lab530/KenYu/SMOKE/tools/logs/inference/kitti_train/data/"}
-PRED_LIST = ["SMOKE", "MonoFlex", "GAC", "DD3D", "Pseudo-LiDAR"]
+# # KITTI_mixup
+# LABEL_DIR  = "/home/lab530/KenYu/kitti_mixup_1/training/label_2/"
+# IMAGE_DIR  = "/home/lab530/KenYu/kitti_mixup_1/training/image_2/"
+# CALIB_DIR  = "/home/lab530/KenYu/kitti_mixup_1/training/calib/"
+# OUTPUT_DIR = "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/viz_result/kitti_mixup_1/"
+# PRED_DIRS = {"GAC": "/home/lab530/KenYu/kitti_mixup_1/training/label_2/"}
+# PRED_LIST = ["GAC"]
+# OBJ_COLOR = {'Cyclist': 'yellow', 
+#              'Pedestrian': 'cyan', 
+#              'Van': 'red', 
+#              'Misc': 'purple', 
+#              'Truck': 'orange',
+#              'Car'  : 'green'}
+# VEHICLES = ['Car']
+
+# # Nuscene 
+# LABEL_DIR  = "/home/lab530/KenYu/nusc_kitti/training/label_2/"
+# IMAGE_DIR  = "/home/lab530/KenYu/nusc_kitti/training/image_2/"
+# CALIB_DIR  = "/home/lab530/KenYu/nusc_kitti/training/calib/"
+# OUTPUT_DIR = "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/viz_result/nuscene_kitti/"
+# PRED_DIRS = {"GAC": "/home/lab530/KenYu/visualDet3D/exp_output/nuscene_kitti/Mono3D/output/validation/data/"}
+# PRED_LIST = ["GAC"]
+# OBJ_COLOR = {'bicycle': 'yellow', 
+#              'pedestrian': 'cyan', 
+#              'bus': 'red', 
+#              'barrier': 'purple', 
+#              'truck': 'orange',
+#              'car'  : 'green',
+#              'construction_vehicle' : 'blue',
+#              'motorcycle' : 'pink',
+#              'traffic_cone' : 'red',
+#              'trailer' : 'red'}
+# VEHICLES = ['barrier', 'bicycle', 'bus', 'car', 'construction_vehicle', 'motorcycle', 'pedestrian', 'traffic_cone', 'trailer', 'truck']
+
+# Get all of them combine (KITTI)
+# LABEL_DIR  = "/home/lab530/KenYu/visualDet3D/kitti/training/label_2/"
+# IMAGE_DIR  = "/home/lab530/KenYu/visualDet3D/kitti/training/image_2/"
+# CALIB_DIR  = "/home/lab530/KenYu/visualDet3D/kitti/training/calib/"
+# OUTPUT_DIR = "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/viz_result/comparison/"
+# PRED_DIRS = {"Pseudo-LiDAR" : "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/pseudo_lidar_prediction/",
+#             "MonoFlex"     : "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/monoflex_prediction/" ,
+#             "DD3D"         : "/home/lab530/KenYu/dd3d/outputs/2cyqwjvr-20220811_163826/inference/final-tta/kitti_3d_val/bbox3d_predictions_standard_format/",
+#             "GAC"          : "/home/lab530/KenYu/visualDet3D/baseline_exp/Mono3D/output/validation/data/",
+#             "SMOKE"        : "/home/lab530/KenYu/SMOKE/tools/logs/inference/kitti_train/data/"}
+# PRED_LIST = ["SMOKE", "MonoFlex", "GAC", "DD3D", "Pseudo-LiDAR"]
 
 OBJ_COLOR = {'Cyclist': 'yellow', 
              'Pedestrian': 'cyan', 
@@ -30,7 +64,7 @@ OBJ_COLOR = {'Cyclist': 'yellow',
              'Misc': 'purple', 
              'Truck': 'orange',
              'Car'  : 'green'}
-
+VEHICLES = ['Car']
 
 # For Pseudo-LiDAR
 # LABEL_DIR  = "/home/lab530/KenYu/visualDet3D/kitti/training/label_2/"
@@ -54,11 +88,11 @@ OBJ_COLOR = {'Cyclist': 'yellow',
 # OUTPUT_DIR = "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/viz_result/DD3D/"
 
 # For GAC
-# LABEL_DIR = "/home/lab530/KenYu/visualDet3D/kitti/training/label_2/"
-# IMAGE_DIR = "/home/lab530/KenYu/visualDet3D/kitti/training/image_2/"
-# CALIB_DIR = "/home/lab530/KenYu/visualDet3D/kitti/training/calib/"
-# PREDI_DIR = "/home/lab530/KenYu/visualDet3D/baseline_exp/Mono3D/output/validation/data/"
-# OUTPUT_DIR = "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/viz_result/GAC/"
+LABEL_DIR = "/home/lab530/KenYu/visualDet3D/kitti/training/label_2/"
+IMAGE_DIR = "/home/lab530/KenYu/visualDet3D/kitti/training/image_2/"
+CALIB_DIR = "/home/lab530/KenYu/visualDet3D/kitti/training/calib/"
+PREDI_DIR = "/home/lab530/KenYu/visualDet3D/exp_output/nms_test/nms_0/Mono3D/output/validation/data/"
+OUTPUT_DIR = "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/viz_result/GAC/"
 
 # For M3D-RPN
 # LABEL_DIR = "/home/lab530/KenYu/M3D-RPN/data/kitti_split1/validation/label_2/"
@@ -203,15 +237,17 @@ def compute_birdviewbox(line, shape, scale):
     rot_y = npline[13]
 
     R = np.array([[-np.cos(rot_y), np.sin(rot_y)],
-                  [np.sin(rot_y), np.cos(rot_y)]])
+                  [ np.sin(rot_y), np.cos(rot_y)]])
     t = np.array([x, z]).reshape(1, 2).T
 
     x_corners = [0, l, l, 0]  # -l/2
     z_corners = [w, w, 0, 0]  # -w/2
 
-
-    x_corners += -w / 2
-    z_corners += -l / 2
+    # This is a bug !!!
+    # x_corners += -w / 2
+    # z_corners += -l / 2
+    x_corners += -l / 2
+    z_corners += -w / 2
 
     # bounding box in object coordinate
     corners_2D = np.array([x_corners, z_corners])
@@ -231,7 +267,7 @@ def draw_birdeyes(ax2, line, color, title):
     scale = 15
     # Draw GT
     gt_corners_2d = compute_birdviewbox(line, shape, scale)
-    # print(gt_corners_2d)
+    
     codes = [Path.LINETO] * gt_corners_2d.shape[0]
     # print(Path.LINETO)
     codes[0] = Path.MOVETO
@@ -350,9 +386,11 @@ if os.path.exists(OUTPUT_DIR):
     rmtree(OUTPUT_DIR)
 os.mkdir(OUTPUT_DIR)
 
-dataset = [name.split('.')[0] for name in sorted(os.listdir(PRED_DIRS[PRED_LIST[0]]))]
+if IS_COMPARE:
+    dataset = [name.split('.')[0] for name in sorted(os.listdir(PRED_DIRS[PRED_LIST[0]]))]
+else:
+    dataset = [name.split('.')[0] for name in sorted(os.listdir(PREDI_DIR))]
 
-VEHICLES = ['Car'] # ['Car', 'Cyclist', 'Pedestrian']
 if not IS_COMPARE:
     for index in range(len(dataset)):
         image_file = os.path.join(IMAGE_DIR, dataset[index] + '.png')
@@ -444,7 +482,7 @@ if not IS_COMPARE:
 else:
     for index in range(len(dataset)):
         # Create fig
-        fig = plt.figure(figsize=(18, 30), dpi=100)
+        fig = plt.figure(figsize=(18, 15), dpi=100)
         # fig.tight_layout()
         plt.subplots_adjust(wspace=0, hspace=0)
         # 

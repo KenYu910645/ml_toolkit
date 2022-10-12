@@ -107,6 +107,32 @@ def box3d_iou(corners1, corners2):
     iou = inter_vol / (vol1 + vol2 - inter_vol)
     return iou, iou_2d
 
+def box2d_iou(b1, b2):
+    """
+    Reference: https://stackoverflow.com/questions/58995949/calculating-iou-for-bounding-box-predictions
+    Implement the intersection over union (IoU) between box1 and box2
+    Arguments:
+        b1 -- (x_min, y_min, x_max, y_max)
+        b2 -- (x_min, y_min, x_max, y_max)
+    """
+    x11, y11, x21, y21 = b1
+    x12, y12, x22, y22 = b2
+
+    yi1 = max(y11, y12)
+    xi1 = max(x11, x12)
+    yi2 = min(y21, y22)
+    xi2 = min(x21, x22)
+    inter_area = max(((xi2 - xi1) * (yi2 - yi1)), 0)
+    # Calculate the Union area by using Formula: Union(A,B) = A + B - Inter(A,B)
+    box1_area = (x21 - x11) * (y21 - y11)
+    box2_area = (x22 - x12) * (y22 - y12)
+    union_area = box1_area + box2_area - inter_area
+    # compute the IoU
+    try: 
+        return inter_area / union_area
+    except ZeroDivisionError: # TODO but how could this happen
+        return 0.0
+
 # ----------------------------------
 # Helper functions for evaluation
 # ----------------------------------
