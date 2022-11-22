@@ -33,12 +33,28 @@ VEHICLES = ['Car']
 # # VEHICLES = ['barrier', 'bicycle', 'bus', 'car', 'construction_vehicle', 'motorcycle', 'pedestrian', 'traffic_cone', 'trailer', 'truck']
 # VEHICLES = ['car']
 
+# Anchor Generation
+LABEL_DIR  = "/home/lab530/KenYu/kitti/training/label_2/"
+IMAGE_DIR  = "/home/lab530/KenYu/kitti/training/image_2/"
+CALIB_DIR  = "/home/lab530/KenYu/kitti/training/calib/"
+OUTPUT_DIR = "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/viz_result/anchor_generation/"
+PRED_DIRS = [("GAC", "/home/lab530/KenYu/visualDet3D/exp_output/anchor_gen/Mono3D/output/validation/data/")]
+
+
+
+# # KITTI_mixup one file prediction
+# LABEL_DIR  = "/home/lab530/KenYu/kitti_seg_1/training/label_2/"
+# IMAGE_DIR  = "/home/lab530/KenYu/kitti_seg_1/training/image_2/"
+# CALIB_DIR  = "/home/lab530/KenYu/kitti_seg_1/training/calib/"
+# OUTPUT_DIR = "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/viz_result/kitti_toy/"
+# PRED_DIRS = [("GAC", "exp_output/mixup/kitti_mixup_1/Mono3D/output/test/data/")]
+
 # KITTI_mixup
-LABEL_DIR  = "/home/lab530/KenYu/kitti_mixup_1/training/label_2/"
-IMAGE_DIR  = "/home/lab530/KenYu/kitti_mixup_1/training/image_2/"
-CALIB_DIR  = "/home/lab530/KenYu/kitti_mixup_1/training/calib/"
-OUTPUT_DIR = "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/viz_result/kitti_mixup_1/"
-PRED_DIRS = [("GAC", "/home/lab530/KenYu/kitti_mixup_1/training/label_2/")]
+# LABEL_DIR  = "/home/lab530/KenYu/kitti_seg_1/training/label_2/"
+# IMAGE_DIR  = "/home/lab530/KenYu/kitti_seg_1/training/image_2/"
+# CALIB_DIR  = "/home/lab530/KenYu/kitti_seg_1/training/calib/"
+# OUTPUT_DIR = "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/viz_result/kitti_seg_1/"
+# PRED_DIRS = [("GAC", "/home/lab530/KenYu/kitti_seg_1/training/label_2/")]
 
 # Nuscene 
 # LABEL_DIR  = "/home/lab530/KenYu/nusc_kitti/training/label_2/"
@@ -88,74 +104,6 @@ class detectionInfo(object):
 
         # global orientation [-pi, pi]
         self.rot_global = float(line[14])
-
-    def member_to_list(self):
-        output_line = []
-        for name, value in vars(self).items():
-            output_line.append(value)
-        return output_line
-
-    def box3d_candidate(self, rot_local, soft_range):
-        x_corners = [self.l, self.l, self.l, self.l, 0, 0, 0, 0]
-        y_corners = [self.h, 0, self.h, 0, self.h, 0, self.h, 0]
-        z_corners = [0, 0, self.w, self.w, self.w, self.w, 0, 0]
-
-        x_corners = [i - self.l / 2 for i in x_corners]
-        y_corners = [i - self.h for i in y_corners]
-        z_corners = [i - self.w / 2 for i in z_corners]
-
-        corners_3d = np.transpose(np.array([x_corners, y_corners, z_corners]))
-        point1 = corners_3d[0, :]
-        point2 = corners_3d[1, :]
-        point3 = corners_3d[2, :]
-        point4 = corners_3d[3, :]
-        point5 = corners_3d[6, :]
-        point6 = corners_3d[7, :]
-        point7 = corners_3d[4, :]
-        point8 = corners_3d[5, :]
-
-        # set up projection relation based on local orientation
-        xmin_candi = xmax_candi = ymin_candi = ymax_candi = 0
-
-        if 0 < rot_local < np.pi / 2:
-            xmin_candi = point8
-            xmax_candi = point2
-            ymin_candi = point2
-            ymax_candi = point5
-
-        if np.pi / 2 <= rot_local <= np.pi:
-            xmin_candi = point6
-            xmax_candi = point4
-            ymin_candi = point4
-            ymax_candi = point1
-
-        if np.pi < rot_local <= 3 / 2 * np.pi:
-            xmin_candi = point2
-            xmax_candi = point8
-            ymin_candi = point8
-            ymax_candi = point1
-
-        if 3 * np.pi / 2 <= rot_local <= 2 * np.pi:
-            xmin_candi = point4
-            xmax_candi = point6
-            ymin_candi = point6
-            ymax_candi = point5
-
-        # soft constraint
-        div = soft_range * np.pi / 180
-        if 0 < rot_local < div or 2*np.pi-div < rot_local < 2*np.pi:
-            xmin_candi = point8
-            xmax_candi = point6
-            ymin_candi = point6
-            ymax_candi = point5
-
-        if np.pi - div < rot_local < np.pi + div:
-            xmin_candi = point2
-            xmax_candi = point4
-            ymin_candi = point8
-            ymax_candi = point1
-
-        return xmin_candi, xmax_candi, ymin_candi, ymax_candi
 
 def compute_birdviewbox(line, shape, scale):
     npline = [np.float64(line[i]) for i in range(1, len(line))]
