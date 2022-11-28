@@ -41,7 +41,6 @@ OUTPUT_DIR = "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/vi
 PRED_DIRS = [("GAC", "/home/lab530/KenYu/visualDet3D/exp_output/anchor_gen/Mono3D/output/validation/data/")]
 
 
-
 # # KITTI_mixup one file prediction
 # LABEL_DIR  = "/home/lab530/KenYu/kitti_seg_1/training/label_2/"
 # IMAGE_DIR  = "/home/lab530/KenYu/kitti_seg_1/training/image_2/"
@@ -303,7 +302,10 @@ for index in range(len(dataset)):
         for line_gt in f1:
             line_gt = line_gt.strip().split(' ')
             # Draw GT 3D bounding box
+            # This should only be use when you want to show GAC's original accept gts
+            # if line_gt[0] in VEHICLES and int(line_gt[2]) < 2 and float(line_gt[13]) > 3 :
             if line_gt[0] in VEHICLES:
+                
                 color = OBJ_COLOR[line_gt[0]]
                 draw_3Dbox(ax_img[1], P2, line_gt, color, is_print_conf = False)
                 [draw_birdeyes(a, line_gt, 'orange', 'ground truth', is_print_conf = False) for a in ax_bev]
