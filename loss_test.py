@@ -10,7 +10,11 @@ predit = torch.tensor([-3., -4., 5., -5., 4., 9.])
 target = torch.tensor(([0.,  0., 0.,  1., 1., 1.]))
 
 predit_sig = Sigmoid_fun(predit)
-print(f"Sigmoid(Prediction) = {predit_sig}")
+print(f"torch.nn.Sigmoid(Prediction) = {predit_sig}")
+print(f"tensor.sigmoid() = {predit.sigmoid()}")
+print(f"torch.sigmoid() = {torch.sigmoid(predit)}")
+
+
 print(BCELoss_fun(predit_sig, target))
 print(BCELossLog_fun(predit, target))
 
