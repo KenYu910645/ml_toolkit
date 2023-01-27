@@ -1,7 +1,7 @@
 import torch
 import sys
 sys.path.insert(0, "../kitti/")
-from util import calc_iou
+from util_kitti import calc_iou
 
 def maxIoU(anchors_tensor, labels_tensor):
     '''

@@ -1,5 +1,8 @@
 from matplotlib.path import Path
 import matplotlib.patches as patches
+import matplotlib.pyplot as plt
+from matplotlib.gridspec import GridSpec
+
 import torch
 import numpy as np 
 from math import pi, atan2
@@ -7,22 +10,66 @@ import pickle
 import copy
 import cv2
 
-def kitti_label_file_parser(label_file_path, is_transform = False):
+import pickle
+with open("/home/lab530/KenYu/ml_toolkit/kitti/type_dict.pkl", "rb") as f:
+    type_dict = pickle.load(f) # {'000169': 'A', .....}
+
+P2_dict = {
+            '[[7.215377e+02 0.000000e+00 6.095593e+02 4.485728e+01]\n ' +
+             '[0.000000e+00 7.215377e+02 1.728540e+02 2.163791e-01]\n ' +
+             '[0.000000e+00 0.000000e+00 1.000000e+00 2.745884e-03]]':'A',
+            '[[ 7.070493e+02  0.000000e+00  6.040814e+02  4.575831e+01]\n ' +
+             '[ 0.000000e+00  7.070493e+02  1.805066e+02 -3.454157e-01]\n ' +
+             '[ 0.000000e+00  0.000000e+00  1.000000e+00  4.981016e-03]]':'B',
+            '[[ 7.183351e+02  0.000000e+00  6.003891e+02  4.450382e+01]\n ' + 
+             '[ 0.000000e+00  7.183351e+02  1.815122e+02 -5.951107e-01]\n ' + 
+             '[ 0.000000e+00  0.000000e+00  1.000000e+00  2.616315e-03]]':'C',
+            '[[ 7.188560e+02  0.000000e+00  6.071928e+02  4.538225e+01]\n ' +
+             '[ 0.000000e+00  7.188560e+02  1.852157e+02 -1.130887e-01]\n ' +
+             '[ 0.000000e+00  0.000000e+00  1.000000e+00  3.779761e-03]]':'D'}
+
+shape_dict_inv  = {(375, 1242, 3): 'A',
+                   (370, 1224, 3): 'B',
+                   (374, 1238, 3): 'C',
+                   (376, 1241, 3): 'D'}
+shape_dict = {'A': (375, 1242, 3),
+              'B': (370, 1224, 3),
+              'C': (374, 1238, 3),
+              'D': (376, 1241, 3)}
+
+
+def kitti_label_file_parser(label_file_path, tf_matrix):
     with open(label_file_path) as f:
         lines = f.read().splitlines()
         lines = list(lines for lines in lines if lines) # Delete empty lines
     return [KITTI_Object(str_line + " NA",
                          idx_img = label_file_path.split('/')[-1].split('.')[0],
                          idx_line = idx_line, 
-                         is_transform = is_transform) for idx_line, str_line in enumerate(lines)]
+                         tf_matrix = tf_matrix) for idx_line, str_line in enumerate(lines)]
 
-def kitti_calib_file_parser(calib_file_path):
+def kitti_calib_file_parser(calib_file_path, new_shape_tf = None, crop_tf = None):
+    '''
+    new_shape_tf = (img_new_h, img_new_w)
+    '''
     with open(calib_file_path) as f:
         lines = f.read().splitlines()
         for line in lines:
             if 'P2:' in line.split():
                 P2 = np.array([float(i) for i in line.split()[1:]] )
                 P2 = np.reshape(P2, (3,4))
+                
+                P2_type = P2_dict[ str(P2) ]
+                
+                # Crop Top Transformation
+                if crop_tf != None:
+                    P2[1, 2] = P2[1, 2] - crop_tf            # cy' = cy - dv
+                    P2[1, 3] = P2[1, 3] - crop_tf * P2[2, 3] # ty' = ty - dv * tz
+                
+                # Resize Transformation 
+                if new_shape_tf != None:
+                    P2[0, :] *= new_shape_tf[1] / shape_dict[P2_type][1]
+                    P2[1, :] *= new_shape_tf[0] / shape_dict[P2_type][0]
+                
                 return P2
 
 def gac_original_anchor_parser(pkl_path, is_transform = False):
@@ -74,24 +121,29 @@ def gac_original_anchor_parser(pkl_path, is_transform = False):
     return anchor_2D, anchor_3D, anchor_mask, anchor_objects
 
 # 
-# assume crop_top 100 pixel and resize into (288, 1280)
-CROP_TOP = 100
-img_new_h, img_new_w = (288, 1280) # img_new_h, img_new_w
+# # assume crop_top 100 pixel and resize into (288, 1280)
+# CROP_TOP = 100
+# img_new_h, img_new_w = (288, 1280) # img_new_h, img_new_w
 
-img = cv2.imread("/home/lab530/KenYu/kitti/training/image_2/000169.png")
-img_ori_h, img_ori_w, _ = img.shape
-img_crp_h = img_ori_h - CROP_TOP
+# img = cv2.imread("/home/lab530/KenYu/kitti/training/image_2/000169.png")
+# img_ori_h, img_ori_w, _ = img.shape
+# img_crp_h = img_ori_h - CROP_TOP
 
-# All the image has the same P2
-P2 = kitti_calib_file_parser("/home/lab530/KenYu/kitti/training/calib/000169.txt")
-# Transform P2 calibration matrix
-P2_tf = copy.deepcopy(P2)
-# Crop Top 
-P2_tf[1, 2] = P2_tf[1, 2] - CROP_TOP               # cy' = cy - dv
-P2_tf[1, 3] = P2_tf[1, 3] - CROP_TOP * P2_tf[2, 3] # ty' = ty - dv * tz
-# Resize (Preserved aspect ratio)
-P2_tf[0, :] = P2_tf[0, :] * img_new_h / img_crp_h
-P2_tf[1, :] = P2_tf[1, :] * img_new_h / img_crp_h
+# # All the image has the same P2
+# P2 = kitti_calib_file_parser("/home/lab530/KenYu/kitti/training/calib/000169.txt")
+# # Transform P2 calibration matrix
+# P2_tf = copy.deepcopy(P2)
+# # Crop Top 
+# P2_tf[1, 2] = P2_tf[1, 2] - CROP_TOP               # cy' = cy - dv
+# P2_tf[1, 3] = P2_tf[1, 3] - CROP_TOP * P2_tf[2, 3] # ty' = ty - dv * tz
+# # Resize (Preserved aspect ratio)
+# P2_tf[0, :] = P2_tf[0, :] * img_new_h / img_crp_h
+# P2_tf[1, :] = P2_tf[1, :] * img_new_h / img_crp_h
+
+# P2_fpn_tf = copy.deepcopy(P2) # TODO
+# # Resize
+# P2_fpn_tf[0, :] *= 384 / img_ori_h
+# P2_fpn_tf[1, :] *= 384 / img_ori_h
 
 # Statistic
 AVG_HEIGT = 1.526
@@ -102,7 +154,7 @@ ANCHOR_Y_3D_MEAN = 1.71
 ANCHOR_Y_3D_STD  = 0.38574
 
 class KITTI_Object:
-    def __init__(self, str_line, is_transform = False, idx_img = None, idx_line = None, center_2d = None):
+    def __init__(self, str_line, tf_matrix, idx_img = None, idx_line = None, center_2d = None):
         # str_line == 'Car 0.00 0 -1.58 587.19 178.91 603.38 191.75 1.26 1.60 3.56 -1.53 1.89 73.44 -1.60 1.0'
         #             'category, truncated, occluded alpha, xmin, ymin, xmax, ymax, height, width, length, x3d, y3d, z3d, rot_y, score]
         #              1         2          3        4      5     6     7     8     9       10     11      12   13   14   15     16
@@ -119,8 +171,9 @@ class KITTI_Object:
         self.idx_line = idx_line # which line does this obj belong to in label.txt
         
         # Get P2
-        if is_transform: self.P2 = P2_tf
-        else: self.P2 = P2
+        # if is_transform: self.P2 = P2_tf
+        # else: self.P2 = P2
+        self.P2 = tf_matrix
         
         # Basic information
         self.h, self.w, self.l = (float(self.h), float(self.w), float(self.l))
@@ -134,8 +187,8 @@ class KITTI_Object:
         if self.truncated != "NA": self.truncated = float(self.truncated)
         if self.occluded  != "NA": self.occluded  = int(self.occluded)
 
-        # Get 2d boudning box
-        if self.xmin == "NA" or is_transform:
+        # Get 2d boudning box # TODO transform???
+        if self.xmin == "NA": #  or (self.P2 == P2).all():
             # Get 2d boudning box via 3D boudning box when it's not explict assigned
             self.xmin = self.corner_2D[0].min()
             self.ymin = self.corner_2D[1].min()
@@ -143,7 +196,6 @@ class KITTI_Object:
             self.ymax = self.corner_2D[1].max()
         else:
             self.xmin, self.ymin, self.xmax, self.ymax = [int(float(i)) for i in sl[4:8]]
-        
         # Get condident score
         if self.score != "NA": self.score = float(self.score)
         
@@ -339,8 +391,7 @@ def set_bev_background(ax):
     ax.set_yticks([])
 
 
-import matplotlib.pyplot as plt
-from matplotlib.gridspec import GridSpec
+
 
 def init_img_plt(imgs, titles = None):
     '''
@@ -428,4 +479,9 @@ def load_tf_image(img_path):
         img_tf = np.pad(img_tf,  [(0, 0), (0, img_new_w - img_tf.shape[1]), (0, 0)], 'constant')
     # print(f"img_tf = {img_tf.shape}") # (288, 1280)
 
+    return img_tf
+
+def load_tf_image_fpn(img_path):
+    img = cv2.imread(img_path)
+    img_tf = cv2.resize(img, (1280, 384))
     return img_tf

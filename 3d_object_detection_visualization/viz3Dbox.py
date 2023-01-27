@@ -38,7 +38,7 @@ LABEL_DIR  = "/home/lab530/KenYu/kitti/training/label_2/"
 IMAGE_DIR  = "/home/lab530/KenYu/kitti/training/image_2/"
 CALIB_DIR  = "/home/lab530/KenYu/kitti/training/calib/"
 OUTPUT_DIR = "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/viz_result/anchor_generation/"
-PRED_DIRS = [("GAC", "/home/lab530/KenYu/visualDet3D/exp_output/anchor_gen/Mono3D/output/validation/data/")]
+PRED_DIRS = [("GAC", "/home/lab530/KenYu/visualDet3D/my_pred/")]
 
 
 # # KITTI_mixup one file prediction
