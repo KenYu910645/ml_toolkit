@@ -47,7 +47,7 @@ def kitti_label_file_parser(label_file_path, tf_matrix):
                          idx_line = idx_line, 
                          tf_matrix = tf_matrix) for idx_line, str_line in enumerate(lines)]
 
-def kitti_calib_file_parser(calib_file_path, new_shape_tf = None, crop_tf = None):
+def kitti_calib_file_parser(calib_file_path, new_shape_tf = None, crop_tf = 0):
     '''
     new_shape_tf = (img_new_h, img_new_w)
     '''
@@ -61,14 +61,13 @@ def kitti_calib_file_parser(calib_file_path, new_shape_tf = None, crop_tf = None
                 P2_type = P2_dict[ str(P2) ]
                 
                 # Crop Top Transformation
-                if crop_tf != None:
-                    P2[1, 2] = P2[1, 2] - crop_tf            # cy' = cy - dv
-                    P2[1, 3] = P2[1, 3] - crop_tf * P2[2, 3] # ty' = ty - dv * tz
+                P2[1, 2] -= crop_tf            # cy' = cy - dv
+                P2[1, 3] -= crop_tf * P2[2, 3] # ty' = ty - dv * tz
                 
-                # Resize Transformation 
+                # Resize Transformation , Perserve aspect ratio
                 if new_shape_tf != None:
-                    P2[0, :] *= new_shape_tf[1] / shape_dict[P2_type][1]
-                    P2[1, :] *= new_shape_tf[0] / shape_dict[P2_type][0]
+                    P2[0, :] *= new_shape_tf[0] / (shape_dict[P2_type][0] - crop_tf)
+                    P2[1, :] *= new_shape_tf[0] / (shape_dict[P2_type][0] - crop_tf)
                 
                 return P2
 
@@ -150,6 +149,10 @@ AVG_HEIGT = 1.526
 AVG_WIDTH = 1.629
 AVG_LENTH = 3.884
 
+STD_HEIGT = 0.137
+STD_WIDTH = 0.102
+STD_LENTH = 0.426
+
 ANCHOR_Y_3D_MEAN = 1.71
 ANCHOR_Y_3D_STD  = 0.38574
 
@@ -163,7 +166,7 @@ class KITTI_Object:
         
         # Parse str_line
         sl = str_line.split()
-        assert len(sl) == 16, 'KITTI_Object must pass in 16 argument, fill in NA if it is not available'
+        assert len(sl) == 16, 'KITTI_Object must get 16 argument in str_line, fill in NA if it is not available'
         self.category, self.truncated, self.occluded, self.alpha, self.xmin, self.ymin, self.xmax, self.ymax, self.h, self.w, self.l, self.x3d, self.y3d, self.z3d, self.rot_y, self.score = sl
         # 
         self.raw_str = str_line
@@ -171,8 +174,6 @@ class KITTI_Object:
         self.idx_line = idx_line # which line does this obj belong to in label.txt
         
         # Get P2
-        # if is_transform: self.P2 = P2_tf
-        # else: self.P2 = P2
         self.P2 = tf_matrix
         
         # Basic information
@@ -239,6 +240,28 @@ class KITTI_Object:
         # Note that this function will output transformed 2D pixels
         return f"{self.category} {self.truncated} {self.occluded} {round(self.alpha, 2)} {round(self.xmin, 2)} {round(self.ymin, 2)} {round(self.xmax, 2)} {round(self.ymax, 2)} {round(self.h, 2)} {round(self.w, 2)} {round(self.l, 2)} {round(self.x3d, 2)} {round(self.y3d, 2)} {round(self.z3d, 2)} {round(self.rot_y, 2)}\n"
 
+    def transform_2d_bbox(self, img_ori_h, crop_tf = 0, resize_tf = None):
+        '''
+        Transform 2D bounding box by P2, this only will be used when groundtrue's 2d box need to transform
+        '''
+        # This is for pytorch-retinanetfpn, 
+        # label.xmin *= 1280/img_ori_w
+        # label.ymin *= 384 /img_ori_h
+        # label.xmax *= 1280/img_ori_w
+        # label.ymax *= 384 /img_ori_h
+
+        # For GAC
+        self.ymin -= crop_tf
+        self.ymax -= crop_tf
+        if resize_tf != None:
+            self.xmin *= resize_tf[0] /(img_ori_h - crop_tf)
+            self.ymin *= resize_tf[0] /(img_ori_h - crop_tf)
+            self.xmax *= resize_tf[0] /(img_ori_h - crop_tf)
+            self.ymax *= resize_tf[0] /(img_ori_h - crop_tf)
+        
+        return
+        
+    
 def get_corner_2D(P2, loc_3d, rot_y, dimension):
     # Get corner that project to 2D image plane
     x3d, y3d, z3d = loc_3d
