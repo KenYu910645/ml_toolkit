@@ -71,7 +71,7 @@ def kitti_calib_file_parser(calib_file_path, new_shape_tf = None, crop_tf = 0):
                 
                 return P2
 
-def gac_original_anchor_parser(pkl_path, is_transform = False):
+def gac_original_anchor_parser(pkl_path, tf_matrix):
     '''
     pkl_path = '/home/lab530/KenYu/visualDet3D/anchor/max_occlusion_2_anchor.pkl'
     '''
@@ -98,11 +98,11 @@ def gac_original_anchor_parser(pkl_path, is_transform = False):
         # Ignore filtered anchor
         if not anchor_mask[i]: continue
 
-        # convert (cx, cy ,cz) to (x3d, y3d, z3d)
+        # convert (cx, cy ,cz) to (x3d, y3d, z3d) # TODO, bug, i don't think 2d center is equal to 3d center
         cx = (anchor_2D[i, 2] + anchor_2D[i, 0]) / 2.0
         cy = (anchor_2D[i, 3] + anchor_2D[i, 1]) / 2.0
         cz =  anchor_3D[i, 0, 0]
-        loc_3d = np.linalg.inv(P2_tf[:, :3]) @ np.array([[cx*cz], [cy*cz], [cz]])
+        loc_3d = np.linalg.inv(tf_matrix[:, :3]) @ np.array([[cx*cz], [cy*cz], [cz]])
         loc_3d[1, 0] += anchor_3D[i, 4, 0] / 2.0
 
         # Get observation angle: alpha
@@ -114,8 +114,8 @@ def gac_original_anchor_parser(pkl_path, is_transform = False):
 
         # 'category, truncated, occluded alpha, xmin, ymin, xmax, ymax, height, width, length, x3d, y3d, z3d, rot_y, score]
         # 1         2          3        4      5     6     7     8     9       10     11      12   13   14   15     16
-        str_line = f"Car NA NA NA NA NA NA NA {anchor_3D[i, 4, 0]} {anchor_3D[i, 3, 0]} {anchor_3D[i, 5, 0]} {loc_3d[0, 0]} {loc_3d[1, 0]} {loc_3d[2, 0]} {rot_y} NA"
-        anchor_objects.append(KITTI_Object(str_line, is_transform = is_transform))
+        str_line = f"Car NA NA NA {anchor_2D[i, 0]} {anchor_2D[i, 1]} {anchor_2D[i, 2]} {anchor_2D[i, 3]} {anchor_3D[i, 4, 0]} {anchor_3D[i, 3, 0]} {anchor_3D[i, 5, 0]} {loc_3d[0, 0]} {loc_3d[1, 0]} {loc_3d[2, 0]} {rot_y} NA"
+        anchor_objects.append(KITTI_Object(str_line, tf_matrix))
     
     return anchor_2D, anchor_3D, anchor_mask, anchor_objects
 
@@ -413,6 +413,36 @@ def set_bev_background(ax):
     ax.set_xticks([])
     ax.set_yticks([])
 
+
+def init_img_plt_without_bev(imgs, titles = None):
+    '''
+    num_plot: how many images does it have 
+    '''
+    num_plot = len(imgs)
+
+    fig = plt.figure(figsize=(18, 5*num_plot), dpi=100)
+    fig.set_facecolor('white')
+    fig.tight_layout()
+
+    plt.subplots_adjust(wspace=0, hspace=0)
+    
+    gs = GridSpec(num_plot, 4)
+    gs.update(wspace=0)  # set the spacing between axes
+
+    axs = [] # [ax_img, ......]
+    for i in range(num_plot):
+        axs.append( fig.add_subplot(gs[i, :]) )
+
+    for i, ax in enumerate(axs):
+        # Draw images
+        ax.axis('off')
+        ax.imshow(imgs[i][...,::-1])
+        
+        # Set titles
+        if not titles is None:
+            ax.set_title(titles[i], fontsize=25)
+    
+    return axs # [ax_img, ......]
 
 
 
