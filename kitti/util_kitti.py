@@ -37,6 +37,14 @@ shape_dict = {'A': (375, 1242, 3),
               'C': (374, 1238, 3),
               'D': (376, 1241, 3)}
 
+def kitti_predi_file_parser(predi_file_path, tf_matrix):
+    with open(predi_file_path) as f:
+        lines = f.read().splitlines()
+        lines = list(lines for lines in lines if lines) # Delete empty lines
+    return [KITTI_Object(str_line,
+                         idx_img = predi_file_path.split('/')[-1].split('.')[0],
+                         idx_line = idx_line, 
+                         tf_matrix = tf_matrix) for idx_line, str_line in enumerate(lines)]
 
 def kitti_label_file_parser(label_file_path, tf_matrix):
     with open(label_file_path) as f:
@@ -234,13 +242,13 @@ class KITTI_Object:
         # if self.cx_f_index >= 80:
         #     print(self.cx)
 
-
     def __str__(self):
         # return self.raw_str
         # Note that this function will output transformed 2D pixels
         return f"{self.category} {self.truncated} {self.occluded} {round(self.alpha, 2)} {round(self.xmin, 2)} {round(self.ymin, 2)} {round(self.xmax, 2)} {round(self.ymax, 2)} {round(self.h, 2)} {round(self.w, 2)} {round(self.l, 2)} {round(self.x3d, 2)} {round(self.y3d, 2)} {round(self.z3d, 2)} {round(self.rot_y, 2)}\n"
 
-    def transform_2d_bbox(self, img_ori_h, crop_tf = 0, resize_tf = None):
+    # def transform_2d_bbox(self, img_ori_h, crop_tf = 0, resize_tf = None):
+    def transform_2d_bbox(self):
         '''
         Transform 2D bounding box by P2, this only will be used when groundtrue's 2d box need to transform
         '''
@@ -251,17 +259,22 @@ class KITTI_Object:
         # label.ymax *= 384 /img_ori_h
 
         # For GAC
-        self.ymin -= crop_tf
-        self.ymax -= crop_tf
-        if resize_tf != None:
-            self.xmin *= resize_tf[0] /(img_ori_h - crop_tf)
-            self.ymin *= resize_tf[0] /(img_ori_h - crop_tf)
-            self.xmax *= resize_tf[0] /(img_ori_h - crop_tf)
-            self.ymax *= resize_tf[0] /(img_ori_h - crop_tf)
+        # self.ymin -= crop_tf
+        # self.ymax -= crop_tf
+        # if resize_tf != None:
+        #     self.xmin *= resize_tf[0] /(img_ori_h - crop_tf)
+        #     self.ymin *= resize_tf[0] /(img_ori_h - crop_tf)
+        #     self.xmax *= resize_tf[0] /(img_ori_h - crop_tf)
+        #     self.ymax *= resize_tf[0] /(img_ori_h - crop_tf)
+        
+        # Get 2d boudning box via 3D boudning box when it's not explict assigned
+        self.xmin = self.corner_2D[0].min()
+        self.ymin = self.corner_2D[1].min()
+        self.xmax = self.corner_2D[0].max()
+        self.ymax = self.corner_2D[1].max()
         
         return
         
-    
 def get_corner_2D(P2, loc_3d, rot_y, dimension):
     # Get corner that project to 2D image plane
     x3d, y3d, z3d = loc_3d
@@ -369,6 +382,10 @@ def compute_birdviewbox(anchor):
     corners_2D = corners_2D.T
     return np.vstack((corners_2D, corners_2D[0,:]))
 
+def xz2bev(x3d, z3d):
+    return (x3d * 15 + int(900/2), 
+            z3d * 15)
+
 def draw_corner_2D(ax, corners_2D, color = (1,0,0), is_draw_front = True):
     # draw all lines through path
     # https://matplotlib.org/users/path_tutorial.html
@@ -413,7 +430,6 @@ def set_bev_background(ax):
     ax.set_xticks([])
     ax.set_yticks([])
 
-
 def init_img_plt_without_bev(imgs, titles = None):
     '''
     num_plot: how many images does it have 
@@ -443,8 +459,6 @@ def init_img_plt_without_bev(imgs, titles = None):
             ax.set_title(titles[i], fontsize=25)
     
     return axs # [ax_img, ......]
-
-
 
 def init_img_plt(imgs, titles = None):
     '''

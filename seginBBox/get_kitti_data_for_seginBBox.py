@@ -1,3 +1,8 @@
+'''
+Crop 2D box instance in KITTI training set, output 512x512 resize ROI image.
+This is suppose to use for instance segmentation algorithm 
+'''
+
 import os 
 import glob
 import cv2

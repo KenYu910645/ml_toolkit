@@ -10,8 +10,8 @@ import numpy as np
 random.seed(5278)
 
 VEHICLES = ["Car"] # What kind of object added to base image
-N_DATASET_REPEAT = 5 # The total size of output image = N_DATASET_REPEAT * 7481
-N_ADD_OBJ = 1 # How many newly added object in a image
+N_DATASET_REPEAT = 1 # The total size of output image = N_DATASET_REPEAT * 7481
+N_ADD_OBJ = 3 # How many newly added object in a image
 SOLID_RATIO = 1.0 # How solid will the added patch looks like
 IS_SEG_GT = True # Use segmentation label or not
 
@@ -27,7 +27,8 @@ OUT_CALIB_DIR = f"/home/lab530/KenYu/kitti_seg_{N_ADD_OBJ}/training/calib/"
 OUT_SPLIT_DIR = f"/home/lab530/KenYu/visualDet3D/visualDet3D/data/kitti/kitti_seg_{N_ADD_OBJ}_split/"
 
 # TODO 2D IOU check might make it a good way to do it ? 
-# TODO multiple object generation should render object by z_3d order, but if we use half transparant rander, this won't be a big problem
+# TODO multiple object generation should render object by the z_3d order, 
+#      but if we use half transparant rander, this won't be a big problem
 
 class Object:
     def __init__(self, str_line, idx_img = None, idx_line = None):
@@ -72,7 +73,7 @@ os.mkdir(OUT_SPLIT_DIR)
 # Record image that can't augumented 
 tartar = []
 
-# Only augumented training split 
+# Only augumented training split, don't augment validation set
 img_paths = []
 with open(TRAIN_SPLIT_TXT, 'r') as f:
     lines = f.read().splitlines()
