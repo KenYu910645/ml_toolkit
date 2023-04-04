@@ -2,6 +2,7 @@ from matplotlib.path import Path
 import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
+import matplotlib
 
 import torch
 import numpy as np 
@@ -245,7 +246,7 @@ class KITTI_Object:
     def __str__(self):
         # return self.raw_str
         # Note that this function will output transformed 2D pixels
-        return f"{self.category} {self.truncated} {self.occluded} {round(self.alpha, 2)} {round(self.xmin, 2)} {round(self.ymin, 2)} {round(self.xmax, 2)} {round(self.ymax, 2)} {round(self.h, 2)} {round(self.w, 2)} {round(self.l, 2)} {round(self.x3d, 2)} {round(self.y3d, 2)} {round(self.z3d, 2)} {round(self.rot_y, 2)}\n"
+        return f"{self.category} {self.truncated} {self.occluded} {round(self.alpha, 2)} {round(self.xmin, 2)} {round(self.ymin, 2)} {round(self.xmax, 2)} {round(self.ymax, 2)} {round(self.h, 2)} {round(self.w, 2)} {round(self.l, 2)} {round(self.x3d, 2)} {round(self.y3d, 2)} {round(self.z3d, 2)} {round(self.rot_y, 2)}"
 
     # def transform_2d_bbox(self, img_ori_h, crop_tf = 0, resize_tf = None):
     def transform_2d_bbox(self):
@@ -274,7 +275,54 @@ class KITTI_Object:
         self.ymax = self.corner_2D[1].max()
         
         return
+
+    def reprojection(self):
+        '''
+        Use (x3d, y3d, z3d, h, w, l, rot_y) and P2 to reproject everything
+        '''
+        # Get corner 2D
+        self.corner_2D = get_corner_2D(self.P2, (self.x3d, self.y3d, self.z3d), self.rot_y, (self.l, self.h, self.w))
         
+        # Get 2dbbox
+        self.xmin = int(self.corner_2D[0].min())
+        self.ymin = int(self.corner_2D[1].min())
+        self.xmax = int(self.corner_2D[0].max())
+        self.ymax = int(self.corner_2D[1].max())
+
+        # Get image dimensino
+        img_h, img_w, img_c = shape_dict[ P2_dict[ str(self.P2) ] ]
+
+        # # 2D bbox saturation
+        # self.xmin = int(max(self.xmin, 0))
+        # self.ymin = int(max(self.ymin, 0))
+        # self.xmax = int(min(self.xmax, img_w-1))
+        # self.ymax = int(min(self.ymax, img_h-1))
+
+        # Get alpha via rot_y if it's not avialable
+        self.alpha = self.rot_y + atan2(self.z3d, self.x3d) - pi/2
+        if   self.alpha >  pi: self.alpha -= 2*pi # make alpha in [-pi, pi]
+        elif self.alpha < -pi: self.alpha += 2*pi
+
+        ##############################
+        ### Additional Information ###
+        ##############################
+        # Get 2D bounding box area
+        self.area = (self.xmax - self.xmin) * (self.ymax - self.ymin)
+        self.y3d_center = self.y3d - self.h/2
+
+        # TODO I don't know why cx,cy,cz ->x3d,y3d,z3d -> cx,cy,cz incur big error
+        # Get cx, cy, cz
+        tmp = np.dot(self.P2, np.array([[self.x3d], [self.y3d - self.h/2], [self.z3d], [1]]))
+        tmp[0:2] /= tmp[2]
+        self.cx, self.cy, self.cz = float(tmp[0]), float(tmp[1]), float(tmp[2])
+
+        self.cx_f_index = int(self.cx * (1/16))
+        self.cy_f_index = int(self.cy * (1/16))
+        
+        # Update str-Line
+        self.raw_str = self.__str__()
+
+   
 def get_corner_2D(P2, loc_3d, rot_y, dimension):
     # Get corner that project to 2D image plane
     x3d, y3d, z3d = loc_3d
@@ -429,6 +477,41 @@ def set_bev_background(ax):
     ax.imshow(np.zeros((BEV_SHAPE, BEV_SHAPE, 3), np.uint8), origin='lower')
     ax.set_xticks([])
     ax.set_yticks([])
+
+def init_img_plt_with_plasma(imgs, titles = None):
+    '''
+    num_plot: how many images does it have 
+    '''
+    num_plot = len(imgs)
+
+    fig = plt.figure(figsize=(18, 5*num_plot), dpi=100)
+    fig.set_facecolor('white')
+    fig.tight_layout()
+
+    plt.subplots_adjust(wspace=0, hspace=0)
+    
+    gs = GridSpec(num_plot, 4)
+    gs.update(wspace=0)  # set the spacing between axes
+
+    axs = [] # [ax_img, ......]
+    for i in range(num_plot):
+        axs.append( fig.add_subplot(gs[i, :]) )
+
+    for i, ax in enumerate(axs):
+        # Draw images
+        ax.axis('off')
+
+        # cax = fig.add_axes([0.85, 0.15, 0.02, 0.7])
+        cax = fig.add_axes([0.87, 0.15, 0.02, 0.7])
+        
+        im = ax.imshow(imgs[i], cmap='plasma')
+        fig.colorbar(im, cax=cax, orientation='vertical')
+
+        # Set titles
+        if not titles is None:
+            ax.set_title(titles[i], fontsize=25)
+    
+    return axs # [ax_img, ......]
 
 def init_img_plt_without_bev(imgs, titles = None):
     '''

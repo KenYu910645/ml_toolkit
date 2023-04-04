@@ -133,6 +133,37 @@ def box2d_iou(b1, b2):
     except ZeroDivisionError: # TODO but how could this happen
         return 0.0
 
+def box2d_iog(b1, b2):
+    """
+    Calculate intertion over b1_area and b2_area
+    Arguments:
+        b1 -- (x_min, y_min, x_max, y_max)
+        b2 -- (x_min, y_min, x_max, y_max)
+    """
+    x11, y11, x21, y21 = b1
+    x12, y12, x22, y22 = b2
+
+    yi1 = max(y11, y12)
+    xi1 = max(x11, x12)
+    yi2 = min(y21, y22)
+    xi2 = min(x21, x22)
+    inter_area = max(((xi2 - xi1) * (yi2 - yi1)), 0)
+    # Calculate the Union area by using Formula: Union(A,B) = A + B - Inter(A,B)
+    box1_area = (x21 - x11) * (y21 - y11)
+    box2_area = (x22 - x12) * (y22 - y12)
+    
+    # Get b1_IoG
+    try:
+        b1_iog = inter_area / box1_area
+    except ZeroDivisionError:
+        b1_iog = 0.0
+    # Get b2_IoG
+    try:
+        b2_iog = inter_area / box2_area
+    except ZeroDivisionError:
+        b2_iog = 0.0
+
+    return (b1_iog, b2_iog)
 # ----------------------------------
 # Helper functions for evaluation
 # ----------------------------------
