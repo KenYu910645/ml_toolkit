@@ -9,21 +9,34 @@ import copy
 import json 
 import numpy as np 
 from math import sqrt
+import argparse
 
 import sys
 sys.path.insert(0, "/home/lab530/KenYu/ml_toolkit/kitti")
 from iou_3d import get_3d_box, box3d_iou, box2d_iou, box2d_iog
 from util_kitti import kitti_calib_file_parser, KITTI_Object
 
-random.seed(5278)
+parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser.add_argument('--num_dataset_repeat', type=int,   default=5, help='The total size of output image = N_DATASET_REPEAT * 7481')
+parser.add_argument('--num_add_obj'       , type=int,   default=3, help='How many newly added object in a image')
+parser.add_argument('--solid_ratio'       , type=float, default=1.0, help='How solid will the added patch looks like')
+parser.add_argument('--use_segement'   , action='store_true', help='whether to use segment data')
+parser.add_argument('--use_scene_aware', action='store_true', help='whether to use scene-aware data')
+parser.add_argument('--use_z_jitter'   , action='store_true', help='whether to use z-axis jittering')
+
+args = parser.parse_args()
+
+print(args)
+
+# random.seed(5278)
 
 VEHICLES = ["Car"] # What kind of object added to base image
-N_DATASET_REPEAT = 5 # The total size of output image = N_DATASET_REPEAT * 7481
-N_ADD_OBJ = 3 # How many newly added object in a image
-SOLID_RATIO = 1.0 # How solid will the added patch looks like
-IS_SEG_GT = True # Use segmentation label or not
-IS_DEP_CHECK = False # True # Use depth map to check scene or not (Scene-Aware Copy Paste)
-IS_OBJ_Z_CHANGE = True # Whether to jitter object's z location
+N_DATASET_REPEAT = args.num_dataset_repeat
+N_ADD_OBJ        = args.num_add_obj
+SOLID_RATIO      = args.solid_ratio
+IS_SEG_GT        = args.use_segement
+IS_DEP_CHECK     = args.use_scene_aware
+IS_OBJ_Z_CHANGE  = args.use_z_jitter
 
 IMAGE_DIR = "/home/lab530/KenYu/kitti/training/image_2/"
 LABEL_DIR = "/home/lab530/KenYu/kitti/training/label_2/"
@@ -271,7 +284,11 @@ for idx_repeat in range(N_DATASET_REPEAT):
                     gt_add_new.ymax = img_tar_h
                 
                 # Check depth map
-                if IS_DEP_CHECK and not check_depth_map(gt_add_new, img_tar_depth): continue
+                if IS_DEP_CHECK:
+                    if os.path.exists(depth_map_path):
+                        if not check_depth_map(gt_add_new, img_tar_depth): continue
+                    else:
+                        print(f"[WARNING] Skip depth map check because no depth map found in {depth_map_path}")
 
                 gt_rst_old = gt_add_old
                 gt_rst_new = gt_add_new
@@ -308,7 +325,7 @@ for idx_repeat in range(N_DATASET_REPEAT):
         # Output label.txt
         # print(os.path.join(OUT_LABEL_DIR, f"{idx_repeat}{img_name[1:]}.txt"))
         with open(os.path.join(OUT_LABEL_DIR, f"{idx_repeat}{img_name[1:]}.txt"), 'w') as f:
-            for gt in gts_tar: f.write(gt.raw_str + '\n')
+            for gt in gts_tar: f.write(gt.__str__() + '\n')
         
         # Output image.png
         cv2.imwrite( os.path.join(OUT_IMAGE_DIR, f"{idx_repeat}{img_name[1:]}.png") , img_tar)
