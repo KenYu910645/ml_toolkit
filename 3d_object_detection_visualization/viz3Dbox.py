@@ -33,13 +33,18 @@ VEHICLES = ['Car']
 # # VEHICLES = ['barrier', 'bicycle', 'bus', 'car', 'construction_vehicle', 'motorcycle', 'pedestrian', 'traffic_cone', 'trailer', 'truck']
 # VEHICLES = ['car']
 
-# Anchor Generation
+# # GAC
 LABEL_DIR  = "/home/lab530/KenYu/kitti/training/label_2/"
 IMAGE_DIR  = "/home/lab530/KenYu/kitti/training/image_2/"
 CALIB_DIR  = "/home/lab530/KenYu/kitti/training/calib/"
-OUTPUT_DIR = "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/viz_result/anchor_generation/"
-PRED_DIRS = [("GAC", "/home/lab530/KenYu/visualDet3D/my_pred/")]
+OUTPUT_DIR = "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/viz_result/tmp/"
+# PRED_DIRS = [("GAC", "/home/lab530/KenYu/visualDet3D/exp_output/best/Mono3D/output/validation/data")]
 
+# LABEL_DIR  = "/home/lab530/KenYu/kitti/training/label_2/"
+# IMAGE_DIR  = "/home/lab530/KenYu/kitti/training/image_2/"
+# CALIB_DIR  = "/home/lab530/KenYu/kitti/training/calib/"
+# OUTPUT_DIR = "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/viz_result/GAC_original_no_filter/"
+# PRED_DIRS = [("GAC", "/home/lab530/KenYu/visualDet3D/exp_output/baseline_gac_original/Mono3D/output/validation/data/")]
 
 # # KITTI_mixup one file prediction
 # LABEL_DIR  = "/home/lab530/KenYu/kitti_seg_1/training/label_2/"
@@ -69,11 +74,12 @@ PRED_DIRS = [("GAC", "/home/lab530/KenYu/visualDet3D/my_pred/")]
 # OUTPUT_DIR = "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/viz_result/nuscene_kitti/"
 # PRED_DIRS = [("SMOKE", "/home/lab530/KenYu/SMOKE/tools/logs/inference/kitti_train/data/")]
 
-# PRED_DIRS = [("Pseudo-LiDAR", "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/pseudo_lidar_prediction/"),
-#              ("MonoFlex"    , "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/monoflex_prediction/"),
-#              ("DD3D"        , "/home/lab530/KenYu/dd3d/outputs/2cyqwjvr-20220811_163826/inference/final-tta/kitti_3d_val/bbox3d_predictions_standard_format/"),
-#              ("GAC"         , "/home/lab530/KenYu/visualDet3D/baseline_exp/Mono3D/output/validation/data/"),
-#              ("SMOKE"       , "/home/lab530/KenYu/SMOKE/tools/logs/inference/kitti_train/data/")]
+PRED_DIRS = [("SMOKE"        , "/home/lab530/KenYu/SMOKE/tools/logs/inference/kitti_train/data/"),
+             ("Pseudo-LiDAR" , "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/pseudo_lidar_prediction/"),
+             ("MonoFlex"     , "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/monoflex_prediction/"),
+             ("DD3D"         , "/home/lab530/KenYu/dd3d/outputs/2cyqwjvr-20220811_163826/inference/final-tta/kitti_3d_val/bbox3d_predictions_standard_format/"),
+             ("Ground-aware" , "/home/lab530/KenYu/visualDet3D/exp_output/baseline_gac_original/Mono3D/output/validation/data/"),
+             ("Ours"         , "/home/lab530/KenYu/visualDet3D/exp_output/best/Mono3D/output/validation/data/"),]
 
 class detectionInfo(object):
     def __init__(self, line):
@@ -140,9 +146,9 @@ def compute_birdviewbox(line, shape, scale):
 
     return np.vstack((corners_2D, corners_2D[0,:]))
 
-def draw_birdeyes(ax2, line, color, title, is_print_conf = False):
-    shape = 900
-    scale = 15
+def draw_birdeyes(ax2, line, color, title, is_print_conf = False, shape=900):
+    shape = shape # 900
+    scale = 20
     # Draw GT
     gt_corners_2d = compute_birdviewbox(line, shape, scale)
     
@@ -273,9 +279,12 @@ os.mkdir(OUTPUT_DIR)
 dataset = [name.split('.')[0] for name in sorted(os.listdir(PRED_DIRS[0][1]))]
 
 for index in range(len(dataset)):
+    # TODO
+    if dataset[index] != "000039": continue
+    
     # Create fig
-    fig = plt.figure(figsize=(18, 15), dpi=100)
-    # fig.tight_layout()
+    fig = plt.figure(figsize=(21, 5*(2+len(PRED_DIRS))), dpi=100)
+    fig.tight_layout()
     plt.subplots_adjust(wspace=0, hspace=0)
     # 
     gs = GridSpec(2+len(PRED_DIRS), 4)
@@ -308,7 +317,7 @@ for index in range(len(dataset)):
                 
                 color = OBJ_COLOR[line_gt[0]]
                 draw_3Dbox(ax_img[1], P2, line_gt, color, is_print_conf = False)
-                [draw_birdeyes(a, line_gt, 'orange', 'ground truth', is_print_conf = False) for a in ax_bev]
+                [draw_birdeyes(a, line_gt, 'orange', 'ground truth', is_print_conf = False, shape = image.size[1]) for a in ax_bev]
 
     # Draw Prediction bounding box
     for method_idx, method_name in enumerate(PRED_DIRS) :
@@ -319,14 +328,14 @@ for index in range(len(dataset)):
                 if line_p[0] in VEHICLES:
                     color = OBJ_COLOR[line_p[0]]
                     draw_3Dbox(ax_img[method_idx+2], P2, line_p, color)
-                    draw_birdeyes(ax_bev[method_idx+1], line_p, 'green', 'prediction', is_print_conf = True)
+                    draw_birdeyes(ax_bev[method_idx+1], line_p, 'green', 'prediction', is_print_conf = True, shape = image.size[1])
 
-    # Draw method_name on canvas    
-    for i, m_name in enumerate(['Input', 'Ground True'] + list(map(lambda x: x[0], PRED_DIRS))):
-        ax_img[i].text(1 , 1, m_name, fontsize=20, color = (1, 1, 0),
-                bbox=dict(facecolor='black', boxstyle='round'),
-                horizontalalignment='left',
-                verticalalignment='top')
+    # # Draw method_name on canvas    
+    # for i, m_name in enumerate(['Input', 'Ground True'] + list(map(lambda x: x[0], PRED_DIRS))):
+    #     ax_img[i].text(1 , 1, m_name, fontsize=20, color = (1, 1, 0),
+    #             bbox=dict(facecolor='black', boxstyle='round'),
+    #             horizontalalignment='left',
+    #             verticalalignment='top')
     
     # visualize 3D bounding box
     for i in ax_img:
@@ -335,15 +344,17 @@ for index in range(len(dataset)):
         i.set_yticks([])
 
     # Visualize BEV
-    shape = 900
+    shape = image.size[1] # 375 # 9003
     birdimage = np.zeros((shape, shape, 3), np.uint8)
+    
     # plot camera view range
     x1 = np.linspace(0, shape / 2)
     x2 = np.linspace(shape / 2, shape)
     for i in ax_bev:
-        i.plot(x1, shape / 2 - x1, ls='--', color='grey', linewidth=1, alpha=0.5)
-        i.plot(x2, x2 - shape / 2, ls='--', color='grey', linewidth=1, alpha=0.5)
-        i.plot(shape / 2, 0, marker='+', markersize=16, markeredgecolor='red')
+        i.plot(x1, shape / 2 - x1, ls='--', color='grey', linewidth=3, alpha=0.5)
+        i.plot(x2, x2 - shape / 2, ls='--', color='grey', linewidth=3, alpha=0.5)
+        i.scatter(shape / 2, 0, color="red", s=200 , marker="o")
+        
         i.imshow(birdimage, origin='lower')
         i.set_xticks([])
         i.set_yticks([])
