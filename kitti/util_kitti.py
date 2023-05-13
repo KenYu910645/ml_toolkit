@@ -253,28 +253,28 @@ class KITTI_Object:
         '''
         Transform 2D bounding box by P2, this only will be used when groundtrue's 2d box need to transform
         '''
-        # This is for pytorch-retinanetfpn, 
-        # label.xmin *= 1280/img_ori_w
-        # label.ymin *= 384 /img_ori_h
-        # label.xmax *= 1280/img_ori_w
-        # label.ymax *= 384 /img_ori_h
-
-        # For GAC
-        # self.ymin -= crop_tf
-        # self.ymax -= crop_tf
-        # if resize_tf != None:
-        #     self.xmin *= resize_tf[0] /(img_ori_h - crop_tf)
-        #     self.ymin *= resize_tf[0] /(img_ori_h - crop_tf)
-        #     self.xmax *= resize_tf[0] /(img_ori_h - crop_tf)
-        #     self.ymax *= resize_tf[0] /(img_ori_h - crop_tf)
-        
         # Get 2d boudning box via 3D boudning box when it's not explict assigned
         self.xmin = self.corner_2D[0].min()
         self.ymin = self.corner_2D[1].min()
         self.xmax = self.corner_2D[0].max()
         self.ymax = self.corner_2D[1].max()
-        
         return
+
+    def transform_2d_bbox_manually(self, img_ori_h, crop_tf = 0, resize_tf = None):
+        # For GAC
+        self.ymin -= crop_tf
+        self.ymax -= crop_tf
+        if resize_tf != None:
+            self.xmin *= resize_tf[0] /(img_ori_h - crop_tf)
+            self.ymin *= resize_tf[0] /(img_ori_h - crop_tf)
+            self.xmax *= resize_tf[0] /(img_ori_h - crop_tf)
+            self.ymax *= resize_tf[0] /(img_ori_h - crop_tf)
+        
+        # This is for pytorch-retinanetfpn, 
+        # label.xmin *= 1280/img_ori_w
+        # label.ymin *= 384 /img_ori_h
+        # label.xmax *= 1280/img_ori_w
+        # label.ymax *= 384 /img_ori_h
 
     def reprojection(self):
         '''
@@ -449,7 +449,7 @@ def draw_corner_2D(ax, corners_2D, color = (1,0,0), is_draw_front = True):
 
     # put a mask on the front
     if is_draw_front:
-        width = corners_2D[:, 3][0] - corners_2D[:, 1][0]
+        width  = corners_2D[:, 3][0] - corners_2D[:, 1][0]
         height = corners_2D[:, 2][1] - corners_2D[:, 1][1]
         front_fill = patches.Rectangle((corners_2D[:, 1]), width, height, fill=True, color=color, alpha=0.4)
         ax.add_patch(front_fill)
@@ -538,8 +538,7 @@ def init_img_plt_without_bev(imgs, titles = None):
         ax.imshow(imgs[i][...,::-1])
         
         # Set titles
-        if not titles is None:
-            ax.set_title(titles[i], fontsize=25)
+        if not titles is None: ax.set_title(titles[i], fontsize=25)
     
     return axs # [ax_img, ......]
 

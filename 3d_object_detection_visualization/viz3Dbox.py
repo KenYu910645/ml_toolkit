@@ -16,7 +16,7 @@ OBJ_COLOR = {'Cyclist': 'yellow',
              'Van': 'red', 
              'Misc': 'purple', 
              'Truck': 'orange',
-             'Car'  : 'green'}
+             'Car'  : 'red'} # 'green'
 VEHICLES = ['Car']
 
 # Nuscene categories
@@ -37,7 +37,7 @@ VEHICLES = ['Car']
 LABEL_DIR  = "/home/lab530/KenYu/kitti/training/label_2/"
 IMAGE_DIR  = "/home/lab530/KenYu/kitti/training/image_2/"
 CALIB_DIR  = "/home/lab530/KenYu/kitti/training/calib/"
-OUTPUT_DIR = "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/viz_result/tmp/"
+OUTPUT_DIR = "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/viz_result/compare_new_new/"
 # PRED_DIRS = [("GAC", "/home/lab530/KenYu/visualDet3D/exp_output/best/Mono3D/output/validation/data")]
 
 # LABEL_DIR  = "/home/lab530/KenYu/kitti/training/label_2/"
@@ -75,11 +75,21 @@ OUTPUT_DIR = "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/vi
 # PRED_DIRS = [("SMOKE", "/home/lab530/KenYu/SMOKE/tools/logs/inference/kitti_train/data/")]
 
 PRED_DIRS = [("SMOKE"        , "/home/lab530/KenYu/SMOKE/tools/logs/inference/kitti_train/data/"),
+             ("MonoGRNet"    , "/home/lab530/KenYu/MonoGRNet/outputs/kittiBox/val_out/val_result/"),
              ("Pseudo-LiDAR" , "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/pseudo_lidar_prediction/"),
              ("MonoFlex"     , "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/monoflex_prediction/"),
              ("DD3D"         , "/home/lab530/KenYu/dd3d/outputs/2cyqwjvr-20220811_163826/inference/final-tta/kitti_3d_val/bbox3d_predictions_standard_format/"),
              ("Ground-aware" , "/home/lab530/KenYu/visualDet3D/exp_output/baseline_gac_original/Mono3D/output/validation/data/"),
              ("Ours"         , "/home/lab530/KenYu/visualDet3D/exp_output/best/Mono3D/output/validation/data/"),]
+
+# PRED_DIRS = [("Faster-RCNN", "/home/lab530/KenYu/mmdetection/faster_rcnn_exps/output/"),
+#              ("YOLOv3"     , "/home/lab530/KenYu/mmdetection/yolov3_exps/output/"),
+#              ("FCOS"       , "/home/lab530/KenYu/mmdetection/fcos_exps/output/"),
+#              ("RetinaNet"  , "/home/lab530/KenYu/mmdetection/retinanet_exps/output/"),
+#              ("Ours"       , "/home/lab530/KenYu/visualDet3D/exp_output/baseline_gac_original/Mono3D/output/validation/data/"),
+#              ("Ours+DAS"   , "/home/lab530/KenYu/visualDet3D/exp_output/das/Mono3D/output/validation/data/"),]
+
+
 
 class detectionInfo(object):
     def __init__(self, line):
@@ -235,7 +245,7 @@ def draw_3Dbox(ax, P2, line, color, is_print_conf = False):
                 max(0, min(corners_2D[1])),
                 str(conf), fontsize=10, color = (1, 0, 0))
 
-def draw_2Dbox(ax, line, color):
+def draw_2Dbox(ax, line, color, is_print_conf = False):
     x1, y1, x2, y2 = (int(float(line[4])), int(float(line[5])), int(float(line[6])), int(float(line[7])))
     width  = x2 - x1
     height = y2 - y1
@@ -246,6 +256,12 @@ def draw_2Dbox(ax, line, color):
                                     color=color, 
                                     linewidth=1,
                                     alpha=1)
+    # Print confidence score on prediction bounding box
+    if is_print_conf:
+        conf = round(float(line[-1]), 2)
+        ax.text(max(0, x1), 
+                max(0, y1),
+                str(conf), fontsize=10, color = (1, 0, 0))
     ax.add_patch(front_fill)
 
 def draw_3Dgt(ax, P2, line, color):
@@ -280,7 +296,7 @@ dataset = [name.split('.')[0] for name in sorted(os.listdir(PRED_DIRS[0][1]))]
 
 for index in range(len(dataset)):
     # TODO
-    if dataset[index] != "000039": continue
+    # if dataset[index] != "000039": continue
     
     # Create fig
     fig = plt.figure(figsize=(21, 5*(2+len(PRED_DIRS))), dpi=100)
@@ -316,6 +332,7 @@ for index in range(len(dataset)):
             if line_gt[0] in VEHICLES:
                 
                 color = OBJ_COLOR[line_gt[0]]
+                # draw_2Dbox(ax_img[1], line_gt, color, is_print_conf = False)
                 draw_3Dbox(ax_img[1], P2, line_gt, color, is_print_conf = False)
                 [draw_birdeyes(a, line_gt, 'orange', 'ground truth', is_print_conf = False, shape = image.size[1]) for a in ax_bev]
 
@@ -325,17 +342,18 @@ for index in range(len(dataset)):
         with open(prediction_file) as f2:
             for line_p in f2:
                 line_p = line_p.strip().split(' ')
-                if line_p[0] in VEHICLES:
+                if line_p[0] in VEHICLES and float(line_p[-1]) > 0.5: # Only print out conf?0.5
                     color = OBJ_COLOR[line_p[0]]
+                    # draw_2Dbox(ax_img[method_idx+2], line_p, color,  is_print_conf = True)
                     draw_3Dbox(ax_img[method_idx+2], P2, line_p, color)
                     draw_birdeyes(ax_bev[method_idx+1], line_p, 'green', 'prediction', is_print_conf = True, shape = image.size[1])
 
-    # # Draw method_name on canvas    
-    # for i, m_name in enumerate(['Input', 'Ground True'] + list(map(lambda x: x[0], PRED_DIRS))):
-    #     ax_img[i].text(1 , 1, m_name, fontsize=20, color = (1, 1, 0),
-    #             bbox=dict(facecolor='black', boxstyle='round'),
-    #             horizontalalignment='left',
-    #             verticalalignment='top')
+    # Draw method_name on canvas    
+    for i, m_name in enumerate(['Input', 'Ground Truth'] + list(map(lambda x: x[0], PRED_DIRS))):
+        ax_img[i].text(1 , 1, m_name, fontsize=20, color = (1, 1, 0),
+                bbox=dict(facecolor='black', boxstyle='round'),
+                horizontalalignment='left',
+                verticalalignment='top')
     
     # visualize 3D bounding box
     for i in ax_img:
