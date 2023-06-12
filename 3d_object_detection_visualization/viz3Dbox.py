@@ -16,7 +16,7 @@ OBJ_COLOR = {'Cyclist': 'yellow',
              'Van': 'red', 
              'Misc': 'purple', 
              'Truck': 'orange',
-             'Car'  : 'red'} # 'green'
+             'Car'  : 'green'} #
 VEHICLES = ['Car']
 
 # Nuscene categories
@@ -75,7 +75,7 @@ OUTPUT_DIR = "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/vi
 # PRED_DIRS = [("SMOKE", "/home/lab530/KenYu/SMOKE/tools/logs/inference/kitti_train/data/")]
 
 PRED_DIRS = [("SMOKE"        , "/home/lab530/KenYu/SMOKE/tools/logs/inference/kitti_train/data/"),
-             ("MonoGRNet"    , "/home/lab530/KenYu/MonoGRNet/outputs/kittiBox/val_out/val_result/"),
+             ("MonoGRNet"    , "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/monogrnet_prediction/"),
              ("Pseudo-LiDAR" , "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/pseudo_lidar_prediction/"),
              ("MonoFlex"     , "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/monoflex_prediction/"),
              ("DD3D"         , "/home/lab530/KenYu/dd3d/outputs/2cyqwjvr-20220811_163826/inference/final-tta/kitti_3d_val/bbox3d_predictions_standard_format/"),
@@ -157,8 +157,8 @@ def compute_birdviewbox(line, shape, scale):
     return np.vstack((corners_2D, corners_2D[0,:]))
 
 def draw_birdeyes(ax2, line, color, title, is_print_conf = False, shape=900):
-    shape = shape # 900
-    scale = 20
+    shape = 900 # shape # 900
+    scale = 15 # 20
     # Draw GT
     gt_corners_2d = compute_birdviewbox(line, shape, scale)
     
@@ -362,7 +362,7 @@ for index in range(len(dataset)):
         i.set_yticks([])
 
     # Visualize BEV
-    shape = image.size[1] # 375 # 9003
+    shape = 900 # image.size[1] # 375 # 9003
     birdimage = np.zeros((shape, shape, 3), np.uint8)
     
     # plot camera view range

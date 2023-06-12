@@ -2,3 +2,4 @@
 __pycache__/
 3d_object_detection_visualization/monoflex_prediction/
 3d_object_detection_visualization/pseudo_lidar_prediction/
+3d_object_detection_visualization/monogrnet_prediction/
