@@ -504,8 +504,12 @@ def init_img_plt_with_plasma(imgs, titles = None):
         # cax = fig.add_axes([0.85, 0.15, 0.02, 0.7])
         cax = fig.add_axes([0.87, 0.15, 0.02, 0.7])
         
-        im = ax.imshow(imgs[i], cmap='plasma')
-        fig.colorbar(im, cax=cax, orientation='vertical')
+        im = ax.imshow(imgs[i], cmap='plasma') # jet plasma jet_r
+
+        # fig.colorbar(im, cax=cax, orientation='vertical')
+        # cbar = fig.colorbar(im, cax=cax, orientation='vertical')
+        # cbar.ax.invert_yaxis()
+
 
         # Set titles
         if not titles is None:
