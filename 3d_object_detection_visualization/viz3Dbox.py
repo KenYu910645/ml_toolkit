@@ -37,7 +37,7 @@ VEHICLES = ['Car']
 LABEL_DIR  = "/home/lab530/KenYu/kitti/training/label_2/"
 IMAGE_DIR  = "/home/lab530/KenYu/kitti/training/image_2/"
 CALIB_DIR  = "/home/lab530/KenYu/kitti/training/calib/"
-OUTPUT_DIR = "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/viz_result/compare_new_new/"
+OUTPUT_DIR = "/home/lab530/KenYu/ml_toolkit/3d_object_detection_visualization/viz_result/compare_new_new_new/"
 # PRED_DIRS = [("GAC", "/home/lab530/KenYu/visualDet3D/exp_output/best/Mono3D/output/validation/data")]
 
 # LABEL_DIR  = "/home/lab530/KenYu/kitti/training/label_2/"
@@ -88,8 +88,6 @@ PRED_DIRS = [("SMOKE"        , "/home/lab530/KenYu/SMOKE/tools/logs/inference/ki
 #              ("RetinaNet"  , "/home/lab530/KenYu/mmdetection/retinanet_exps/output/"),
 #              ("Ours"       , "/home/lab530/KenYu/visualDet3D/exp_output/baseline_gac_original/Mono3D/output/validation/data/"),
 #              ("Ours+DAS"   , "/home/lab530/KenYu/visualDet3D/exp_output/das/Mono3D/output/validation/data/"),]
-
-
 
 class detectionInfo(object):
     def __init__(self, line):
@@ -167,7 +165,7 @@ def draw_birdeyes(ax2, line, color, title, is_print_conf = False, shape=900):
     codes[0] = Path.MOVETO
     codes[-1] = Path.CLOSEPOLY
     pth = Path(gt_corners_2d, codes)
-    p = patches.PathPatch(pth, fill=False, color=color, label=title)
+    p = patches.PathPatch(pth, fill=False, color=color, linewidth=3 , label=title)
     ax2.add_patch(p)
     # Draw conf text
     # if len(line) == 16: # Prediction 
@@ -299,14 +297,14 @@ for index in range(len(dataset)):
     # if dataset[index] != "000039": continue
     
     # Create fig
-    fig = plt.figure(figsize=(21, 5*(2+len(PRED_DIRS))), dpi=100)
+    fig = plt.figure(figsize=(21, 5*(1+len(PRED_DIRS))), dpi=100)
     fig.tight_layout()
     plt.subplots_adjust(wspace=0, hspace=0)
     # 
-    gs = GridSpec(2+len(PRED_DIRS), 4)
+    gs = GridSpec(1+len(PRED_DIRS), 4)
     gs.update(wspace=0)  # set the spacing between axes.
-    ax_img = [fig.add_subplot(gs[i, :3]) for i in range(2 + len(PRED_DIRS))]
-    ax_bev = [fig.add_subplot(gs[i+1,3]) for i in range(len(PRED_DIRS)+1)]
+    ax_img = [fig.add_subplot(gs[i, :3]) for i in range(1+len(PRED_DIRS))]
+    ax_bev = [fig.add_subplot(gs[i,  3]) for i in range(1+len(PRED_DIRS))]
     # Load image 
     image_file = os.path.join(IMAGE_DIR, dataset[index] + '.png')
     image = Image.open(image_file).convert('RGB')
@@ -345,11 +343,11 @@ for index in range(len(dataset)):
                 if line_p[0] in VEHICLES and float(line_p[-1]) > 0.5: # Only print out conf?0.5
                     color = OBJ_COLOR[line_p[0]]
                     # draw_2Dbox(ax_img[method_idx+2], line_p, color,  is_print_conf = True)
-                    draw_3Dbox(ax_img[method_idx+2], P2, line_p, color)
-                    draw_birdeyes(ax_bev[method_idx+1], line_p, 'green', 'prediction', is_print_conf = True, shape = image.size[1])
+                    draw_3Dbox(ax_img[method_idx+1], P2, line_p, color)
+                    draw_birdeyes(ax_bev[method_idx+1], line_p, 'green', 'prediction', is_print_conf = False, shape = image.size[1])
 
     # Draw method_name on canvas    
-    for i, m_name in enumerate(['Input', 'Ground Truth'] + list(map(lambda x: x[0], PRED_DIRS))):
+    for i, m_name in enumerate(['Ground Truth'] + list(map(lambda x: x[0], PRED_DIRS))):
         ax_img[i].text(1 , 1, m_name, fontsize=20, color = (1, 1, 0),
                 bbox=dict(facecolor='black', boxstyle='round'),
                 horizontalalignment='left',
@@ -363,15 +361,15 @@ for index in range(len(dataset)):
 
     # Visualize BEV
     shape = 900 # image.size[1] # 375 # 9003
-    birdimage = np.zeros((shape, shape, 3), np.uint8)
+    birdimage = np.ones((shape, shape, 3), np.uint8)*255
     
     # plot camera view range
     x1 = np.linspace(0, shape / 2)
     x2 = np.linspace(shape / 2, shape)
     for i in ax_bev:
-        i.plot(x1, shape / 2 - x1, ls='--', color='grey', linewidth=3, alpha=0.5)
-        i.plot(x2, x2 - shape / 2, ls='--', color='grey', linewidth=3, alpha=0.5)
-        i.scatter(shape / 2, 0, color="red", s=200 , marker="o")
+        i.plot(x1, shape / 2 - x1, ls='--', color='black', linewidth=3, alpha=0.5)
+        i.plot(x2, x2 - shape / 2, ls='--', color='black', linewidth=3, alpha=0.5)
+        i.scatter(shape / 2, 0, color="red", s=100 , marker="o")
         
         i.imshow(birdimage, origin='lower')
         i.set_xticks([])
